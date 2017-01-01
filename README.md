@@ -20,13 +20,13 @@ package main
 import (
     "fmt"
 	"time"
-    
+
     "github.com/kylemcc/parse"
 )
 
 func main() {
     parse.Initialize("APP_ID", "REST_KEY", "MASTER_KEY") // master key is optional
-    
+
     user := parse.User{}
     q, err := parse.NewQuery(&user)
 	if err != nil {
@@ -40,8 +40,8 @@ func main() {
             fmt.Printf("Error querying parse: %d - %s\n", pe.Code(), pe.Message())
         }
     }
-    
-    fmt.Printf("Retrieved user with id: %s\n", u.Id)
+
+    fmt.Printf("Retrieved user with id: %s\n", user.Id)
 
 	q2, _ := parse.NewQuery(&parse.User{})
 	q2.GreaterThan("createdAt", time.Date(2014, 01, 01, 0, 0, 0, 0, time.UTC))
@@ -51,13 +51,13 @@ func main() {
 	// .Each will retrieve all results for a query and send them to the provided channel
 	// The iterator returned allows for early cancelation of the iteration process, and
 	// stores any error that triggers early termination
-	iterator, err := q2.Each(rc)
+	it, err := q2.Each(rc)
 	for u := range rc{
 		fmt.Printf("received user: %v\n", u)
 		// Do something
 		if err := process(u); err != nil {
 			// Cancel if there was an error
-			iterator.Cancel()
+			it.Cancel()
 		}
 	}
 

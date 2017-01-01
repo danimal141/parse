@@ -116,7 +116,7 @@ func SetUserAgent(ua string) error {
 // will block for the appropriate period of time.
 func SetRateLimit(limit, burst uint) error {
 	if defaultClient == nil {
-		return errors.New("parse.Initialize must be called before parse.SetHTTPTimeout")
+		return errors.New("parse.Initialize must be called before parse.SetRateLimit")
 	}
 
 	defaultClient.limiter = newRateLimiter(limit, burst)
@@ -125,7 +125,7 @@ func SetRateLimit(limit, burst uint) error {
 
 func SetHTTPClient(c *http.Client) error {
 	if defaultClient == nil {
-		return errors.New("parse.Initialize must be called before parse.SetHTTPTimeout")
+		return errors.New("parse.Initialize must be called before parse.SetHTTPClient")
 	}
 
 	defaultClient.httpClient = c
