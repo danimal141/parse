@@ -25,7 +25,7 @@ import (
 )
 
 func main() {
-	parse.Initialize("APP_ID", "REST_KEY", "MASTER_KEY") // master key is optional
+	parse.Initialize("APP_ID", "REST_KEY", "MASTER_KEY", "HOST", "PATH") // master key is optional
 
 	user := parse.User{}
 	q, err := parse.NewQuery(&user)
@@ -36,7 +36,7 @@ func main() {
 	q.GreaterThan("numFollowers", 10).OrderBy("-createdAt") // API is chainable
 	err := q.First()
 	if err != nil {
-		if pe, ok := err.(parse.ParseError); ok {
+		if pe, ok := err.(parse.APIError); ok {
 			fmt.Printf("Error querying parse: %d - %s\n", pe.Code(), pe.Message())
 		}
 	}
