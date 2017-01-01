@@ -25,7 +25,7 @@ func (c *createT) endpoint() (string, error) {
 	p := getEndpointBase(c.v)
 	u := url.URL{}
 	u.Scheme = "https"
-	u.Host = parseHost
+	u.Host = defaultHost
 	u.Path = p
 
 	return u.String(), nil

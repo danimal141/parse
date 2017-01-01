@@ -283,7 +283,7 @@ func (u *updateT) endpoint() (string, error) {
 	}
 
 	_url.Scheme = "https"
-	_url.Host = parseHost
+	_url.Host = defaultHost
 	_url.Path = p
 
 	return _url.String(), nil

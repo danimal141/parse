@@ -51,7 +51,7 @@ func (d *deleteT) endpoint() (string, error) {
 	p := getEndpointBase(d.inst)
 	u := url.URL{}
 	u.Scheme = "https"
-	u.Host = parseHost
+	u.Host = defaultHost
 	u.Path = path.Join(p, id)
 
 	return u.String(), nil

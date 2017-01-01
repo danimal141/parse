@@ -25,10 +25,10 @@ func (c *callFnT) method() string {
 }
 
 func (c *callFnT) endpoint() (string, error) {
-	p := path.Join(ParseVersion, "functions", c.name)
+	p := path.Join(defaultPath, "functions", c.name)
 	u := url.URL{}
 	u.Scheme = "https"
-	u.Host = parseHost
+	u.Host = defaultHost
 	u.Path = p
 
 	return u.String(), nil

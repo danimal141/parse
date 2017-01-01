@@ -26,10 +26,10 @@ func setupTestServer(handler http.HandlerFunc) *httptest.Server {
 		panic(err)
 	}
 
-	ctx.oldHost = parseHost
+	ctx.oldHost = defaultHost
 	ctx.oldHttpClient = defaultClient.httpClient
 
-	parseHost = _url.Host
+	defaultHost = _url.Host
 	defaultClient.httpClient = &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -43,11 +43,11 @@ func setupTestServer(handler http.HandlerFunc) *httptest.Server {
 
 func teardownTestServer() {
 	ctx.ts.Close()
-	parseHost = ctx.oldHost
+	defaultHost = ctx.oldHost
 	defaultClient.httpClient = ctx.oldHttpClient
 }
 
 func TestMain(m *testing.M) {
-	Initialize("app_id", "rest_key", "master_key")
+	Initialize("app_id", "rest_key", "master_key", "api.parse.com", "/1")
 	os.Exit(m.Run())
 }

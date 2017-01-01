@@ -289,15 +289,15 @@ func TestGetEndpointBase(t *testing.T) {
 		inst     interface{}
 		expected string
 	}{
-		{&ClassNameTestType{}, "1/classes/ClassNameTestType"},
-		{&[]ClassNameTestType{}, "1/classes/ClassNameTestType"},
-		{&[]*ClassNameTestType{}, "1/classes/ClassNameTestType"},
-		{&CustomClassNameTestType{}, "1/other/ep"},
-		{&[]CustomClassNameTestType{}, "1/other/ep"},
-		{&[]*CustomClassNameTestType{}, "1/other/ep"},
-		{&CustomClassNameTestType2{}, "1/other/ep2"},
-		{&[]CustomClassNameTestType2{}, "1/other/ep2"},
-		{&[]*CustomClassNameTestType2{}, "1/other/ep2"},
+		{&ClassNameTestType{}, "/1/classes/ClassNameTestType"},
+		{&[]ClassNameTestType{}, "/1/classes/ClassNameTestType"},
+		{&[]*ClassNameTestType{}, "/1/classes/ClassNameTestType"},
+		{&CustomClassNameTestType{}, "/1/other/ep"},
+		{&[]CustomClassNameTestType{}, "/1/other/ep"},
+		{&[]*CustomClassNameTestType{}, "/1/other/ep"},
+		{&CustomClassNameTestType2{}, "/1/other/ep2"},
+		{&[]CustomClassNameTestType2{}, "/1/other/ep2"},
+		{&[]*CustomClassNameTestType2{}, "/1/other/ep2"},
 	}
 
 	for _, tc := range cases {

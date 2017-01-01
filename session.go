@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
+	"path"
 	"reflect"
 )
 
@@ -146,53 +147,53 @@ func (s *sessionT) CallFunction(name string, params Params, resp interface{}) er
 	return callFn(name, params, resp, s)
 }
 
-func (s *loginRequestT) method() string {
-	if s.authdata != nil {
+func (l *loginRequestT) method() string {
+	if l.authdata != nil {
 		return "POST"
 	}
 
 	return "GET"
 }
 
-func (s *loginRequestT) endpoint() (string, error) {
+func (l *loginRequestT) endpoint() (string, error) {
 	u := url.URL{}
 	u.Scheme = "https"
-	u.Host = parseHost
-	if s.s != nil {
-		u.Path = "/1/users/me"
-	} else if s.authdata != nil {
-		u.Path = "/1/users"
+	u.Host = defaultHost
+	if l.s != nil {
+		u.Path = path.Join(defaultPath, "users/me")
+	} else if l.authdata != nil {
+		u.Path = path.Join(defaultPath, "users")
 	} else {
-		u.Path = "/1/login"
+		u.Path = path.Join(defaultPath, "login")
 	}
 
-	if s.username != "" && s.password != "" {
+	if l.username != "" && l.password != "" {
 		v := url.Values{}
-		v["username"] = []string{s.username}
-		v["password"] = []string{s.password}
+		v["username"] = []string{l.username}
+		v["password"] = []string{l.password}
 		u.RawQuery = v.Encode()
 	}
 
 	return u.String(), nil
 }
 
-func (s *loginRequestT) body() (string, error) {
-	if s.authdata != nil {
-		b, err := json.Marshal(map[string]interface{}{"authData": s.authdata})
+func (l *loginRequestT) body() (string, error) {
+	if l.authdata != nil {
+		b, err := json.Marshal(map[string]interface{}{"authData": l.authdata})
 		return string(b), err
 	}
 	return "", nil
 }
 
-func (s *loginRequestT) useMasterKey() bool {
+func (l *loginRequestT) useMasterKey() bool {
 	return false
 }
 
-func (s *loginRequestT) session() *sessionT {
-	return s.s
+func (l *loginRequestT) session() *sessionT {
+	return l.s
 }
 
-func (s *loginRequestT) contentType() string {
+func (l *loginRequestT) contentType() string {
 	return "application/x-www-form-urlencoded"
 }
 
