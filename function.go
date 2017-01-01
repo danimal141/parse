@@ -10,14 +10,47 @@ import (
 
 type Params map[string]interface{}
 
-func CallFunction(name string, params Params, resp interface{}) error {
-	return callFn(name, params, resp, nil)
+func (c *clientT) CallFunction(name string, params Params, resp interface{}) error {
+	return c.callFn(name, params, resp, nil)
 }
 
 type callFnT struct {
+	client *clientT
+
 	name           string
 	params         Params
 	currentSession *sessionT
+}
+
+type fnRespT struct {
+	Result interface{} `parse:"result"`
+}
+
+func (c *clientT) callFn(name string, params Params, resp interface{}, currentSession *sessionT) error {
+	rv := reflect.ValueOf(resp)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		return errors.New("resp must be a non-nil pointer")
+	}
+
+	if params == nil {
+		params = Params{}
+	}
+
+	cr := &callFnT{
+		client:         c,
+		name:           name,
+		params:         params,
+		currentSession: currentSession,
+	}
+	if b, err := c.doRequest(cr); err != nil {
+		return err
+	} else {
+		r := fnRespT{}
+		if err := json.Unmarshal(b, &r); err != nil {
+			return err
+		}
+		return populateValue(resp, r.Result)
+	}
 }
 
 func (c *callFnT) method() string {
@@ -25,11 +58,10 @@ func (c *callFnT) method() string {
 }
 
 func (c *callFnT) endpoint() (string, error) {
-	p := path.Join(defaultPath, "functions", c.name)
 	u := url.URL{}
 	u.Scheme = "https"
-	u.Host = defaultHost
-	u.Path = p
+	u.Host = c.client.host
+	u.Path = path.Join(c.client.path, "functions", c.name)
 
 	return u.String(), nil
 }
@@ -49,34 +81,4 @@ func (c *callFnT) session() *sessionT {
 
 func (c *callFnT) contentType() string {
 	return "application/json"
-}
-
-type fnRespT struct {
-	Result interface{} `parse:"result"`
-}
-
-func callFn(name string, params Params, resp interface{}, currentSession *sessionT) error {
-	rv := reflect.ValueOf(resp)
-	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return errors.New("resp must be a non-nil pointer")
-	}
-
-	if params == nil {
-		params = Params{}
-	}
-
-	cr := &callFnT{
-		name:           name,
-		params:         params,
-		currentSession: currentSession,
-	}
-	if b, err := defaultClient.doRequest(cr); err != nil {
-		return err
-	} else {
-		r := fnRespT{}
-		if err := json.Unmarshal(b, &r); err != nil {
-			return err
-		}
-		return populateValue(resp, r.Result)
-	}
 }

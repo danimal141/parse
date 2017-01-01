@@ -9,13 +9,13 @@ import (
 func TestDeleteRequiresPointer(t *testing.T) {
 	u := User{}
 	expected := "v must be a non-nil pointer"
-	if err := Delete(u, true); err == nil {
+	if err := testClient.Delete(u, true); err == nil {
 		t.Error("Delete should return an error when argument is not a pointer")
 	} else if err.Error() != expected {
 		t.Errorf("Unexpected error message. Got [%s] expected [%s]\n", err, expected)
 	}
 
-	if err := Delete(u, false); err == nil {
+	if err := testClient.Delete(u, false); err == nil {
 		t.Error("Delete should return an error when argument is not a pointer")
 	} else if err.Error() != expected {
 		t.Errorf("Unexpected error message. Got [%s] expected [%s]\n", err, expected)
@@ -35,7 +35,7 @@ func TestEndpointDelete(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		d := deleteT{inst: tc.inst}
+		d := &deleteT{inst: tc.inst, client: testClient}
 		actual, err := d.endpoint()
 		if err != nil {
 			t.Errorf("Unexpected error creating query: %v\n", err)
@@ -81,5 +81,5 @@ func TestDelete(t *testing.T) {
 	defer teardownTestServer()
 
 	u := User{Base: Base{Id: "abc"}}
-	Delete(&u, false)
+	testClient.Delete(&u, false)
 }

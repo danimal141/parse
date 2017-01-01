@@ -12,7 +12,7 @@ import (
 func TestCreateRequiresPointer(t *testing.T) {
 	u := User{}
 	expected := "v must be a non-nil pointer"
-	if err := Create(u, false); err == nil {
+	if err := testClient.Create(u, false); err == nil {
 		t.Error("Create should return an error when argument is not a pointer")
 	} else if err.Error() != expected {
 		t.Errorf("Unexpected error message. Got [%s] expected [%s]\n", err, expected)
@@ -37,8 +37,9 @@ func TestPayload(t *testing.T) {
 		FCount:    11,
 	}
 
-	cr := createT{
-		v: &tu,
+	cr := &createT{
+		client: testClient,
+		v:      &tu,
 	}
 
 	e := map[string]interface{}{
@@ -100,7 +101,7 @@ func TestCreate(t *testing.T) {
 		FCount:    11,
 	}
 
-	err := Create(&u, false)
+	err := testClient.Create(&u, false)
 	if err != nil {
 		t.Errorf("Unexpected error creating object: %v\n", err)
 		t.FailNow()
@@ -144,7 +145,7 @@ func TestCreateUseMasterKey(t *testing.T) {
 		FCount:    11,
 	}
 
-	err := Create(&u, true)
+	err := testClient.Create(&u, true)
 	if err != nil {
 		t.Errorf("unexpected error on create: %v\n", err)
 	}
@@ -178,6 +179,7 @@ type TestTypeOmitEmpty struct {
 
 func TestCreateOmitEmpty(t *testing.T) {
 	cr := &createT{
+		client: testClient,
 		v: &TestTypeOmitEmpty{
 			EmptyArrField:   []string{},
 			OEEmptyArrField: []string{},

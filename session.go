@@ -18,6 +18,8 @@ type Session interface {
 }
 
 type loginRequestT struct {
+	client *clientT
+
 	username string
 	password string
 	s        *sessionT
@@ -25,6 +27,8 @@ type loginRequestT struct {
 }
 
 type sessionT struct {
+	client *clientT
+
 	user         interface{}
 	sessionToken string
 }
@@ -34,7 +38,7 @@ type sessionT struct {
 // Optionally provide a custom User type to use in place of parse.User. If u is not
 // nil, it will be populated with the user's attributes, and will be accessible
 // by calling session.User().
-func Login(username, password string, u interface{}) (Session, error) {
+func (c *clientT) Login(username, password string, u interface{}) (Session, error) {
 	var user interface{}
 
 	if u == nil {
@@ -45,8 +49,8 @@ func Login(username, password string, u interface{}) (Session, error) {
 		user = u
 	}
 
-	s := &sessionT{user: user}
-	if b, err := defaultClient.doRequest(&loginRequestT{username: username, password: password}); err != nil {
+	s := &sessionT{user: user, client: c}
+	if b, err := c.doRequest(&loginRequestT{username: username, password: password, client: c}); err != nil {
 		return nil, err
 	} else if st, err := handleLoginResponse(b, s.user); err != nil {
 		return nil, err
@@ -57,7 +61,7 @@ func Login(username, password string, u interface{}) (Session, error) {
 	return s, nil
 }
 
-func LoginFacebook(authData *FacebookAuthData, u interface{}) (Session, error) {
+func (c *clientT) LoginFacebook(authData *FacebookAuthData, u interface{}) (Session, error) {
 	var user interface{}
 
 	if u == nil {
@@ -68,8 +72,8 @@ func LoginFacebook(authData *FacebookAuthData, u interface{}) (Session, error) {
 		user = u
 	}
 
-	s := &sessionT{user: user}
-	if b, err := defaultClient.doRequest(&loginRequestT{authdata: &AuthData{Facebook: authData}}); err != nil {
+	s := &sessionT{user: user, client: c}
+	if b, err := c.doRequest(&loginRequestT{authdata: &AuthData{Facebook: authData}, client: c}); err != nil {
 		return nil, err
 	} else if st, err := handleLoginResponse(b, s.user); err != nil {
 		return nil, err
@@ -85,7 +89,7 @@ func LoginFacebook(authData *FacebookAuthData, u interface{}) (Session, error) {
 // Optionally provide a custom User type to use in place of parse.User. If user is
 // not nil, it will be populated with the user's attributes, and will be accessible
 // by calling session.User().
-func Become(st string, u interface{}) (Session, error) {
+func (c *clientT) Become(st string, u interface{}) (Session, error) {
 	var user interface{}
 
 	if u == nil {
@@ -100,10 +104,12 @@ func Become(st string, u interface{}) (Session, error) {
 		s: &sessionT{
 			sessionToken: st,
 			user:         user,
+			client:       c,
 		},
+		client: c,
 	}
 
-	if b, err := defaultClient.doRequest(r); err != nil {
+	if b, err := c.doRequest(r); err != nil {
 		return nil, err
 	} else if err := handleResponse(b, r.s.user); err != nil {
 		return nil, err
@@ -116,7 +122,7 @@ func (s *sessionT) User() interface{} {
 }
 
 func (s *sessionT) NewQuery(v interface{}) (Query, error) {
-	q, err := NewQuery(v)
+	q, err := s.client.NewQuery(v)
 	if err == nil {
 		if qt, ok := q.(*queryT); ok {
 			qt.currentSession = s
@@ -126,7 +132,7 @@ func (s *sessionT) NewQuery(v interface{}) (Query, error) {
 }
 
 func (s *sessionT) NewUpdate(v interface{}) (Update, error) {
-	u, err := NewUpdate(v)
+	u, err := s.client.NewUpdate(v)
 	if err == nil {
 		if ut, ok := u.(*updateT); ok {
 			ut.currentSession = s
@@ -136,15 +142,15 @@ func (s *sessionT) NewUpdate(v interface{}) (Update, error) {
 }
 
 func (s *sessionT) Create(v interface{}) error {
-	return create(v, false, s)
+	return s.client.create(v, false, s)
 }
 
 func (s *sessionT) Delete(v interface{}) error {
-	return _delete(v, false, s)
+	return s.client._delete(v, false, s)
 }
 
 func (s *sessionT) CallFunction(name string, params Params, resp interface{}) error {
-	return callFn(name, params, resp, s)
+	return s.client.callFn(name, params, resp, s)
 }
 
 func (l *loginRequestT) method() string {
@@ -158,13 +164,13 @@ func (l *loginRequestT) method() string {
 func (l *loginRequestT) endpoint() (string, error) {
 	u := url.URL{}
 	u.Scheme = "https"
-	u.Host = defaultHost
+	u.Host = l.client.host
 	if l.s != nil {
-		u.Path = path.Join(defaultPath, "users/me")
+		u.Path = path.Join(l.client.path, "users/me")
 	} else if l.authdata != nil {
-		u.Path = path.Join(defaultPath, "users")
+		u.Path = path.Join(l.client.path, "users")
 	} else {
-		u.Path = path.Join(defaultPath, "login")
+		u.Path = path.Join(l.client.path, "login")
 	}
 
 	if l.username != "" && l.password != "" {

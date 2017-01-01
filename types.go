@@ -539,8 +539,6 @@ func getEndpointBase(v interface{}) string {
 		cname := getClassName(inst)
 		p = path.Join("classes", cname)
 	}
-
-	p = path.Join(defaultPath, p)
 	return p
 }
 
@@ -740,7 +738,9 @@ func (c Config) Map(key string) Config {
 	return nil
 }
 
-type configRequestT struct{}
+type configRequestT struct {
+	client *clientT
+}
 
 func (c *configRequestT) method() string {
 	return "GET"
@@ -749,8 +749,8 @@ func (c *configRequestT) method() string {
 func (c *configRequestT) endpoint() (string, error) {
 	u := url.URL{}
 	u.Scheme = "https"
-	u.Host = defaultHost
-	u.Path = path.Join(defaultPath, "config")
+	u.Host = c.client.host
+	u.Path = path.Join(c.client.path, "config")
 	return u.String(), nil
 }
 
@@ -770,20 +770,20 @@ func (c *configRequestT) contentType() string {
 	return ""
 }
 
-func GetConfig() (Config, error) {
-	b, err := defaultClient.doRequest(&configRequestT{})
+func (c *clientT) GetConfig() (Config, error) {
+	b, err := c.doRequest(&configRequestT{client: c})
 	if err != nil {
 		return nil, err
 	}
 
-	c := struct {
+	cfg := struct {
 		Params Config `json:"params"`
 	}{}
-	if err := json.Unmarshal(b, &c); err != nil {
+	if err := json.Unmarshal(b, &cfg); err != nil {
 		return nil, err
 	}
 
-	return c.Params, nil
+	return cfg.Params, nil
 }
 
 // Register a type so that it can be handled when populating struct values.

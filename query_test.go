@@ -42,7 +42,7 @@ func TestEndpoint(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		q, err := NewQuery(tc.inst)
+		q, err := testClient.NewQuery(tc.inst)
 		if err != nil {
 			t.Errorf("Unexpected error creating query: %v\n", err)
 			t.FailNow()
@@ -74,7 +74,7 @@ func TestEndpointGet(t *testing.T) {
 	ops := []opTypeT{otGet}
 
 	for _, tc := range testCases {
-		q, err := NewQuery(tc.inst)
+		q, err := testClient.NewQuery(tc.inst)
 		if err != nil {
 			t.Errorf("Unexpected error creating query: %v\n", err)
 			t.FailNow()
@@ -105,7 +105,7 @@ type TestType struct {
 }
 
 func TestFilters(t *testing.T) {
-	q, err := NewQuery(&TestType{})
+	q, err := testClient.NewQuery(&TestType{})
 	if err != nil {
 		t.Errorf("Uenexpected error creating query: %v\n", err)
 		t.FailNow()
@@ -136,11 +136,11 @@ func TestFilters(t *testing.T) {
 	q.WithinKilometers("f22", GeoPoint{41.894303, -87.676835}, 7.8)
 	q.WithinRadians("f23", GeoPoint{41.894303, -87.676835}, 0.8910)
 
-	subq, _ := NewQuery(&User{})
+	subq, _ := testClient.NewQuery(&User{})
 	subq.EqualTo("email", "kylemcc@gmail.com")
 	q.MatchesKeyInQuery("f24", "testKey", subq)
 
-	subq2, _ := NewQuery(&User{})
+	subq2, _ := testClient.NewQuery(&User{})
 	subq2.EqualTo("city", "Chicago")
 	q.DoesNotMatchKeyInQuery("f25", "testKey2", subq2)
 
@@ -340,8 +340,8 @@ func TestFilters(t *testing.T) {
 func TestQueryRequiresPointer(t *testing.T) {
 	u := User{}
 	expected := "v must be a non-nil pointer"
-	if _, err := NewQuery(u); err == nil {
-		t.Error("NewQuery should return an error when argument is not a pointer")
+	if _, err := testClient.NewQuery(u); err == nil {
+		t.Error("testClient.NewQuery should return an error when argument is not a pointer")
 	} else if err.Error() != expected {
 		t.Errorf("Unexpected error message. Got [%s] expected [%s]\n", err, expected)
 	}
@@ -398,7 +398,7 @@ func TestQueryRequest(t *testing.T) {
 	defer teardownTestServer()
 
 	u := User{}
-	q, err := NewQuery(&u)
+	q, err := testClient.NewQuery(&u)
 	if err != nil {
 		t.Errorf("Unexpected error creating query: %v\n", err)
 		t.FailNow()
@@ -438,7 +438,7 @@ func TestQueryUseMasterKey(t *testing.T) {
 	defer teardownTestServer()
 
 	u := User{}
-	q, err := NewQuery(&u)
+	q, err := testClient.NewQuery(&u)
 	if err != nil {
 		t.Errorf("Unexpected error creating query: %v\n", err)
 		t.FailNow()
@@ -462,7 +462,7 @@ func TestFirst(t *testing.T) {
 	defer teardownTestServer()
 
 	u := User{}
-	q, err := NewQuery(&u)
+	q, err := testClient.NewQuery(&u)
 	if err != nil {
 		t.Errorf("Unexpected error creating query: %v\n", err)
 		t.FailNow()
@@ -479,7 +479,7 @@ func TestFirst(t *testing.T) {
 	}
 
 	us := make([]User, 0, 1)
-	q2, err := NewQuery(&us)
+	q2, err := testClient.NewQuery(&us)
 	if err != nil {
 		t.Errorf("Unexpected error creating query: %v\n", err)
 		t.FailNow()
@@ -506,7 +506,7 @@ func TestCount(t *testing.T) {
 	})
 	defer teardownTestServer()
 
-	q, err := NewQuery(&User{})
+	q, err := testClient.NewQuery(&User{})
 	if err != nil {
 		t.Errorf("Unexpected error creating query: %v\n", err)
 		t.FailNow()
@@ -530,7 +530,7 @@ func TestFind(t *testing.T) {
 	defer teardownTestServer()
 
 	us := make([]User, 0, 1)
-	q, err := NewQuery(&us)
+	q, err := testClient.NewQuery(&us)
 	if err != nil {
 		t.Errorf("Unexpected error creating query: %v\n", err)
 		t.FailNow()
@@ -562,7 +562,7 @@ func TestGet(t *testing.T) {
 	defer teardownTestServer()
 
 	u := User{}
-	q, err := NewQuery(&u)
+	q, err := testClient.NewQuery(&u)
 	if err != nil {
 		t.Errorf("Unexpected error creating query: %v\n", err)
 		t.FailNow()
@@ -604,7 +604,7 @@ func TestEach(t *testing.T) {
 	})
 	defer teardownTestServer()
 
-	q, err := NewQuery(&User{})
+	q, err := testClient.NewQuery(&User{})
 	if err != nil {
 		t.Errorf("Unexpected error creating query: %v\n", err)
 		t.FailNow()

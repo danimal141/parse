@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"path"
 	"time"
 )
 
@@ -39,6 +40,8 @@ type PushNotification interface {
 }
 
 type pushT struct {
+	client *clientT
+
 	shouldUseMasterKey bool
 	channels           []string
 	expirationInterval int64
@@ -48,6 +51,61 @@ type pushT struct {
 	data               map[string]interface{}
 }
 
+// Convenience function for creating a new query for use in SendPush.
+func (c *clientT) NewPushQuery() Query {
+	q, _ := c.NewQuery(&Installation{})
+	return q
+}
+
+// Create a new Push Notifaction
+//
+// See the Push Notification Guide for more details: https://www.parse.com/docs/push_guide#sending/REST
+func (c *clientT) NewPushNotification() PushNotification {
+	return &pushT{client: c}
+}
+
+func (p *pushT) Where(q Query) PushNotification {
+	p.where = q.(*queryT).where
+	return p
+}
+
+func (p *pushT) Channels(c ...string) PushNotification {
+	p.channels = c
+	return p
+}
+
+func (p *pushT) PushTime(t time.Time) PushNotification {
+	d := Date(t)
+	p.pushTime = &d
+	return p
+}
+
+func (p *pushT) ExpirationTime(t time.Time) PushNotification {
+	d := Date(t)
+	p.expirationTime = &d
+	return p
+}
+
+func (p *pushT) ExpirationInterval(d time.Duration) PushNotification {
+	p.expirationInterval = int64(d.Seconds())
+	return p
+}
+
+func (p *pushT) Data(d map[string]interface{}) PushNotification {
+	p.data = d
+	return p
+}
+
+func (p *pushT) Send() error {
+	b, err := p.client.doRequest(p)
+	data := map[string]interface{}{}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	fmt.Printf("data: %v\n", data)
+	return err
+}
+
 func (p *pushT) method() string {
 	return "POST"
 }
@@ -55,8 +113,8 @@ func (p *pushT) method() string {
 func (p *pushT) endpoint() (string, error) {
 	u := url.URL{}
 	u.Scheme = "https"
-	u.Host = defaultHost
-	u.Path = "/1/push"
+	u.Host = p.client.host
+	u.Path = path.Join(p.client.path, "push")
 
 	return u.String(), nil
 }
@@ -96,59 +154,4 @@ func (p *pushT) session() *sessionT {
 
 func (p *pushT) contentType() string {
 	return "application/json"
-}
-
-// Convenience function for creating a new query for use in SendPush.
-func NewPushQuery() Query {
-	q, _ := NewQuery(&Installation{})
-	return q
-}
-
-// Create a new Push Notifaction
-//
-// See the Push Notification Guide for more details: https://www.parse.com/docs/push_guide#sending/REST
-func NewPushNotification() PushNotification {
-	return &pushT{}
-}
-
-func (p *pushT) Where(q Query) PushNotification {
-	p.where = q.(*queryT).where
-	return p
-}
-
-func (p *pushT) Channels(c ...string) PushNotification {
-	p.channels = c
-	return p
-}
-
-func (p *pushT) PushTime(t time.Time) PushNotification {
-	d := Date(t)
-	p.pushTime = &d
-	return p
-}
-
-func (p *pushT) ExpirationTime(t time.Time) PushNotification {
-	d := Date(t)
-	p.expirationTime = &d
-	return p
-}
-
-func (p *pushT) ExpirationInterval(d time.Duration) PushNotification {
-	p.expirationInterval = int64(d.Seconds())
-	return p
-}
-
-func (p *pushT) Data(d map[string]interface{}) PushNotification {
-	p.data = d
-	return p
-}
-
-func (p *pushT) Send() error {
-	b, err := defaultClient.doRequest(p)
-	data := map[string]interface{}{}
-	if err := json.Unmarshal(b, &data); err != nil {
-		return err
-	}
-	fmt.Printf("data: %v\n", data)
-	return err
 }

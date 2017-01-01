@@ -21,9 +21,6 @@ const (
 	UserAgentHeader    = "User-Agent"
 )
 
-var defaultHost string // e.g. "api.parse.com"
-var defaultPath string // e.g. "/1"
-
 var fieldNameCache map[reflect.Type]map[string]string = make(map[reflect.Type]map[string]string)
 var fieldCache = make(map[reflect.Type]reflect.StructField)
 
@@ -41,48 +38,41 @@ type clientT struct {
 	restKey   string
 	masterKey string
 
+	host string
+	path string
+
 	userAgent  string
 	httpClient *http.Client
 
 	limiter limiter
 }
 
-var defaultClient *clientT
-
 // Initialize the parse library with your API keys
-func Initialize(appId, restKey, masterKey, host, path string) {
-	defaultClient = &clientT{
+func NewClient(appId, restKey, masterKey, host, path string) *clientT {
+	return &clientT{
 		appId:      appId,
 		restKey:    restKey,
 		masterKey:  masterKey,
+		host:       host,
+		path:       path,
 		userAgent:  "github.com/kylemcc/parse",
 		httpClient: &http.Client{},
 	}
-	defaultHost = host
-	defaultPath = path
 }
 
 // Set the timeout for requests to Parse
 //
 // Returns an error if called before parse.Initialize
-func SetHTTPTimeout(t time.Duration) error {
-	if defaultClient == nil {
-		return errors.New("parse.Initialize must be called before parse.SetHTTPTimeout")
-	}
-
-	defaultClient.httpClient.Timeout = t
+func (c *clientT) SetHTTPTimeout(t time.Duration) error {
+	c.httpClient.Timeout = t
 	return nil
 }
 
 // Set the User Agent to be specified for requests against Parse
 //
 // Returns an error if called before parse.Initialize
-func SetUserAgent(ua string) error {
-	if defaultClient == nil {
-		return errors.New("parse.Initialize must be called before parse.SetUserAgent")
-	}
-
-	defaultClient.userAgent = ua
+func (c *clientT) SetUserAgent(ua string) error {
+	c.userAgent = ua
 	return nil
 }
 
@@ -94,21 +84,13 @@ func SetUserAgent(ua string) error {
 // If this option is set, this library will restrict calling code to
 // a maximum number of requests per second. Requests exceeding this limit
 // will block for the appropriate period of time.
-func SetRateLimit(limit, burst uint) error {
-	if defaultClient == nil {
-		return errors.New("parse.Initialize must be called before parse.SetRateLimit")
-	}
-
-	defaultClient.limiter = newRateLimiter(limit, burst)
+func (c *clientT) SetRateLimit(limit, burst uint) error {
+	c.limiter = newRateLimiter(limit, burst)
 	return nil
 }
 
-func SetHTTPClient(c *http.Client) error {
-	if defaultClient == nil {
-		return errors.New("parse.Initialize must be called before parse.SetHTTPClient")
-	}
-
-	defaultClient.httpClient = c
+func (c *clientT) SetHTTPClient(hc *http.Client) error {
+	c.httpClient = hc
 	return nil
 }
 
@@ -133,8 +115,8 @@ func (c *clientT) doRequest(op requestT) ([]byte, error) {
 		return nil, err
 	}
 
-	req.Header.Add(UserAgentHeader, defaultClient.userAgent)
-	req.Header.Add(AppIdHeader, defaultClient.appId)
+	req.Header.Add(UserAgentHeader, c.userAgent)
+	req.Header.Add(AppIdHeader, c.appId)
 	if op.useMasterKey() && c.masterKey != "" && op.session() == nil {
 		req.Header.Add(MasterKeyHeader, c.masterKey)
 	} else {
@@ -153,7 +135,7 @@ func (c *clientT) doRequest(op requestT) ([]byte, error) {
 		c.limiter.limit()
 	}
 
-	resp, err := defaultClient.httpClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

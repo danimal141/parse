@@ -12,7 +12,7 @@ import (
 func TestUpdateRequiresPointer(t *testing.T) {
 	u := User{}
 	expected := "v must be a non-nil pointer"
-	if _, err := NewUpdate(u); err == nil {
+	if _, err := testClient.NewUpdate(u); err == nil {
 		t.Error("NewUpdate should return an error when argument is not a pointer")
 	} else if err.Error() != expected {
 		t.Errorf("Unexpected error message. Got [%s] expected [%s]\n", err, expected)
@@ -36,7 +36,7 @@ func TestOperations(t *testing.T) {
 		F13 []string
 	}
 
-	u, err := NewUpdate(&UpdateTest{})
+	u, err := testClient.NewUpdate(&UpdateTest{})
 	if err != nil {
 		t.Errorf("Unexpected error creating update: %v\n", err)
 		t.FailNow()
@@ -178,7 +178,7 @@ func TestExecuteUpdatesStruct(t *testing.T) {
 		F13: []string{"zyx", "wvu", "tsr"},
 	}
 
-	u, err := NewUpdate(&tu)
+	u, err := testClient.NewUpdate(&tu)
 	if err != nil {
 		t.Errorf("Unexpected error creating update: %v\n", err)
 		t.FailNow()
@@ -259,13 +259,13 @@ func TestUpdateUseMasterKey(t *testing.T) {
 	})
 	defer teardownTestServer()
 
-	u1, _ := NewUpdate(&User{})
+	u1, _ := testClient.NewUpdate(&User{})
 	u1.Set("city", "Chicago")
 	if err := u1.Execute(); err != nil {
 		t.Errorf("Unexpected error executing update: %v\n", err)
 	}
 
-	u2, _ := NewUpdate(&User{})
+	u2, _ := testClient.NewUpdate(&User{})
 	u2.Set("city", "Chicago")
 	u2.UseMasterKey()
 	shouldHaveMasterKey = true

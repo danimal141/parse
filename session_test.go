@@ -23,7 +23,7 @@ func TestLogin(t *testing.T) {
 	})
 	defer teardownTestServer()
 
-	s, err := Login("username", "password", nil)
+	s, err := testClient.Login("username", "password", nil)
 	if err != nil {
 		t.Errorf("unexpected error on login: %v\n", err)
 		t.FailNow()
@@ -72,7 +72,7 @@ func TestLoginCustomUserType(t *testing.T) {
 	})
 	defer teardownTestServer()
 
-	s, err := Login("username", "password", &CustomUser{})
+	s, err := testClient.Login("username", "password", &CustomUser{})
 	if err != nil {
 		t.Errorf("unexpected error on login: %v\n", err)
 		t.FailNow()
@@ -138,6 +138,7 @@ func TestSessionOperationsSetSessionTokenHeader(t *testing.T) {
 
 	var s Session
 	s = &sessionT{
+		client:       testClient,
 		user:         &User{},
 		sessionToken: "session_token",
 	}

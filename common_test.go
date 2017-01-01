@@ -16,6 +16,7 @@ type ctxT struct {
 }
 
 var ctx = ctxT{}
+var testClient *clientT
 
 func setupTestServer(handler http.HandlerFunc) *httptest.Server {
 	ts := httptest.NewTLSServer(handler)
@@ -26,11 +27,11 @@ func setupTestServer(handler http.HandlerFunc) *httptest.Server {
 		panic(err)
 	}
 
-	ctx.oldHost = defaultHost
-	ctx.oldHttpClient = defaultClient.httpClient
+	ctx.oldHost = testClient.host
+	ctx.oldHttpClient = testClient.httpClient
 
-	defaultHost = _url.Host
-	defaultClient.httpClient = &http.Client{
+	testClient.host = _url.Host
+	testClient.httpClient = &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true,
@@ -43,11 +44,11 @@ func setupTestServer(handler http.HandlerFunc) *httptest.Server {
 
 func teardownTestServer() {
 	ctx.ts.Close()
-	defaultHost = ctx.oldHost
-	defaultClient.httpClient = ctx.oldHttpClient
+	testClient.host = ctx.oldHost
+	testClient.httpClient = ctx.oldHttpClient
 }
 
 func TestMain(m *testing.M) {
-	Initialize("app_id", "rest_key", "master_key", "api.parse.com", "/1")
+	testClient = NewClient("app_id", "rest_key", "master_key", "api.parse.com", "/1")
 	os.Exit(m.Run())
 }

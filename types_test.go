@@ -130,7 +130,7 @@ func TestConfig(t *testing.T) {
 	})
 	defer teardownTestServer()
 
-	c, err := GetConfig()
+	c, err := testClient.GetConfig()
 	if err != nil {
 		t.Errorf("unexpected error on GetConfig: %v\n", err)
 		t.FailNow()
@@ -157,7 +157,7 @@ func TestConfigHelpers(t *testing.T) {
 	})
 	defer teardownTestServer()
 
-	c, err := GetConfig()
+	c, err := testClient.GetConfig()
 	if err != nil {
 		t.Errorf("unexpected error on GetConfig: %v\n", err)
 		t.FailNow()
@@ -289,15 +289,15 @@ func TestGetEndpointBase(t *testing.T) {
 		inst     interface{}
 		expected string
 	}{
-		{&ClassNameTestType{}, "/1/classes/ClassNameTestType"},
-		{&[]ClassNameTestType{}, "/1/classes/ClassNameTestType"},
-		{&[]*ClassNameTestType{}, "/1/classes/ClassNameTestType"},
-		{&CustomClassNameTestType{}, "/1/other/ep"},
-		{&[]CustomClassNameTestType{}, "/1/other/ep"},
-		{&[]*CustomClassNameTestType{}, "/1/other/ep"},
-		{&CustomClassNameTestType2{}, "/1/other/ep2"},
-		{&[]CustomClassNameTestType2{}, "/1/other/ep2"},
-		{&[]*CustomClassNameTestType2{}, "/1/other/ep2"},
+		{&ClassNameTestType{}, "classes/ClassNameTestType"},
+		{&[]ClassNameTestType{}, "classes/ClassNameTestType"},
+		{&[]*ClassNameTestType{}, "classes/ClassNameTestType"},
+		{&CustomClassNameTestType{}, "other/ep"},
+		{&[]CustomClassNameTestType{}, "other/ep"},
+		{&[]*CustomClassNameTestType{}, "other/ep"},
+		{&CustomClassNameTestType2{}, "other/ep2"},
+		{&[]CustomClassNameTestType2{}, "other/ep2"},
+		{&[]*CustomClassNameTestType2{}, "other/ep2"},
 	}
 
 	for _, tc := range cases {
@@ -335,7 +335,7 @@ func TestRegisterType(t *testing.T) {
 	RegisterType(new(CustType2))
 
 	tt := TestType{}
-	q, _ := NewQuery(&tt)
+	q, _ := testClient.NewQuery(&tt)
 	if err := q.Get("123"); err != nil {
 		t.Errorf("Unexpected error on Get: %v\n", err)
 		t.FailNow()
@@ -384,7 +384,7 @@ func TestPopulateAcl(t *testing.T) {
 	s := struct {
 		Base
 	}{}
-	q, _ := NewQuery(&s)
+	q, _ := testClient.NewQuery(&s)
 	if err := q.Get("blah"); err != nil {
 		t.Errorf("Unexpected error on Get: %v\n", err)
 		t.FailNow()

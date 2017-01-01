@@ -10,21 +10,23 @@ import (
 
 // Delete the instance of the type represented by v from the Parse database. If
 // useMasteKey=true, the Master Key will be used for the deletion request.
-func Delete(v interface{}, useMasterKey bool) error {
-	return _delete(v, useMasterKey, nil)
+func (c *clientT) Delete(v interface{}, useMasterKey bool) error {
+	return c._delete(v, useMasterKey, nil)
 }
 
-func _delete(v interface{}, useMasterKey bool, currentSession *sessionT) error {
+func (c *clientT) _delete(v interface{}, useMasterKey bool, currentSession *sessionT) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return errors.New("v must be a non-nil pointer")
 	}
 
-	_, err := defaultClient.doRequest(&deleteT{inst: v, shouldUseMasterKey: useMasterKey, currentSession: currentSession})
+	_, err := c.doRequest(&deleteT{inst: v, shouldUseMasterKey: useMasterKey, currentSession: currentSession, client: c})
 	return err
 }
 
 type deleteT struct {
+	client *clientT
+
 	inst               interface{}
 	shouldUseMasterKey bool
 	currentSession     *sessionT
@@ -48,10 +50,10 @@ func (d *deleteT) endpoint() (string, error) {
 		return "", fmt.Errorf("can not delete value - type has no Id field")
 	}
 
-	p := getEndpointBase(d.inst)
+	p := path.Join(d.client.path, getEndpointBase(d.inst))
 	u := url.URL{}
 	u.Scheme = "https"
-	u.Host = defaultHost
+	u.Host = d.client.host
 	u.Path = path.Join(p, id)
 
 	return u.String(), nil

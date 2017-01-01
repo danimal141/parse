@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
+	"path"
 	"reflect"
 )
 
 type createT struct {
+	client *clientT
+
 	v                  interface{}
 	shouldUseMasterKey bool
 	currentSession     *sessionT
@@ -17,16 +20,61 @@ type createT struct {
 	password string
 }
 
+// Save a new instance of the type pointed to by v to the Parse database. If
+// useMasteKey=true, the Master Key will be used for the creation request. On a
+// successful request, the CreatedAt field will be set on v.
+//
+// Note: v should be a pointer to a struct whose name represents a Parse class,
+// or that implements the ClassName method
+func (c *clientT) Create(v interface{}, useMasterKey bool) error {
+	return c.create(v, useMasterKey, nil)
+}
+
+func (c *clientT) Signup(username string, password string, user interface{}) error {
+	cr := &createT{
+		client:             c,
+		v:                  user,
+		shouldUseMasterKey: false,
+		currentSession:     nil,
+		isUser:             true,
+		username:           username,
+		password:           password,
+	}
+	if b, err := c.doRequest(cr); err != nil {
+		return err
+	} else {
+		return handleResponse(b, user)
+	}
+}
+
+func (c *clientT) create(v interface{}, useMasterKey bool, currentSession *sessionT) error {
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		return errors.New("v must be a non-nil pointer")
+	}
+
+	cr := &createT{
+		client:             c,
+		v:                  v,
+		shouldUseMasterKey: useMasterKey,
+		currentSession:     currentSession,
+	}
+	if b, err := c.doRequest(cr); err != nil {
+		return err
+	} else {
+		return handleResponse(b, v)
+	}
+}
+
 func (c *createT) method() string {
 	return "POST"
 }
 
 func (c *createT) endpoint() (string, error) {
-	p := getEndpointBase(c.v)
 	u := url.URL{}
 	u.Scheme = "https"
-	u.Host = defaultHost
-	u.Path = p
+	u.Host = c.client.host
+	u.Path = path.Join(c.client.path, getEndpointBase(c.v))
 
 	return u.String(), nil
 }
@@ -88,48 +136,4 @@ func (c *createT) session() *sessionT {
 
 func (c *createT) contentType() string {
 	return "application/json"
-}
-
-// Save a new instance of the type pointed to by v to the Parse database. If
-// useMasteKey=true, the Master Key will be used for the creation request. On a
-// successful request, the CreatedAt field will be set on v.
-//
-// Note: v should be a pointer to a struct whose name represents a Parse class,
-// or that implements the ClassName method
-func Create(v interface{}, useMasterKey bool) error {
-	return create(v, useMasterKey, nil)
-}
-
-func Signup(username string, password string, user interface{}) error {
-	cr := &createT{
-		v:                  user,
-		shouldUseMasterKey: false,
-		currentSession:     nil,
-		isUser:             true,
-		username:           username,
-		password:           password,
-	}
-	if b, err := defaultClient.doRequest(cr); err != nil {
-		return err
-	} else {
-		return handleResponse(b, user)
-	}
-}
-
-func create(v interface{}, useMasterKey bool, currentSession *sessionT) error {
-	rv := reflect.ValueOf(v)
-	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return errors.New("v must be a non-nil pointer")
-	}
-
-	cr := &createT{
-		v:                  v,
-		shouldUseMasterKey: useMasterKey,
-		currentSession:     currentSession,
-	}
-	if b, err := defaultClient.doRequest(cr); err != nil {
-		return err
-	} else {
-		return handleResponse(b, v)
-	}
 }
