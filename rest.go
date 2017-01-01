@@ -36,29 +36,6 @@ type requestT interface {
 	contentType() string
 }
 
-type ParseError interface {
-	error
-	Code() int
-	Message() string
-}
-
-type parseErrorT struct {
-	ErrorCode    int    `json:"code" parse:"code"`
-	ErrorMessage string `json:"error" parse:"error"`
-}
-
-func (e *parseErrorT) Error() string {
-	return fmt.Sprintf("error %d - %s", e.ErrorCode, e.ErrorMessage)
-}
-
-func (e *parseErrorT) Code() int {
-	return e.ErrorCode
-}
-
-func (e *parseErrorT) Message() string {
-	return e.ErrorMessage
-}
-
 type clientT struct {
 	appId     string
 	restKey   string
@@ -200,9 +177,9 @@ func (c *clientT) doRequest(op requestT) ([]byte, error) {
 	}
 
 	// Error formats are consistent. If the response is an error,
-	// return a ParseError
+	// return a APIError
 	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
-		ret := parseErrorT{}
+		ret := apiErrorT{}
 		if err := json.Unmarshal(respBody, &ret); err != nil {
 			return nil, err
 		}
