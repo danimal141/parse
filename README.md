@@ -25,12 +25,12 @@ import (
 )
 
 func main() {
-	parse.Initialize("APP_ID", "REST_KEY", "MASTER_KEY", "HOST", "PATH") // master key is optional
+	cli := parse.NewClient("APP_ID", "REST_KEY", "MASTER_KEY", "HOST", "PATH") // master key is optional
 
 	user := parse.User{}
-	q, err := parse.NewQuery(&user)
+	q, err := cli.NewQuery(&user)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	q.EqualTo("email", "kylemcc@gmail.com")
 	q.GreaterThan("numFollowers", 10).OrderBy("-createdAt") // API is chainable
@@ -42,7 +42,7 @@ func main() {
 	}
 	fmt.Printf("Retrieved user with id: %s\n", user.Id)
 
-	q2, _ := parse.NewQuery(&parse.User{})
+	q2, _ := cli.NewQuery(&parse.User{})
 	q2.GreaterThan("createdAt", time.Date(2014, 01, 01, 0, 0, 0, 0, time.UTC))
 
 	rc := make(chan *parse.User)
@@ -62,7 +62,7 @@ func main() {
 
 	// An error occurred - not all rows were processed
 	if it.Error() != nil {
-		panic(it.Error())
+		log.Fatal(it.Error())
 	}
 }
 ```
