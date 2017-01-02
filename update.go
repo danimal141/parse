@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
 	"path"
 	"reflect"
 )
@@ -270,8 +269,7 @@ func (u *updateT) method() string {
 }
 
 func (u *updateT) endpoint() (string, error) {
-	_url := url.URL{}
-	p := path.Join(u.client.path, getEndpointBase(u.inst))
+	p := getEndpointBase(u.inst)
 
 	rv := reflect.ValueOf(u.inst)
 	rvi := reflect.Indirect(rv)
@@ -285,11 +283,7 @@ func (u *updateT) endpoint() (string, error) {
 		return "", fmt.Errorf("can not update value - type has no Id field")
 	}
 
-	_url.Scheme = "https"
-	_url.Host = u.client.host
-	_url.Path = p
-
-	return _url.String(), nil
+	return p, nil
 }
 
 func (u *updateT) body() (string, error) {

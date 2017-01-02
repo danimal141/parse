@@ -3,7 +3,6 @@ package parse
 import (
 	"encoding/json"
 	"errors"
-	"net/url"
 	"path"
 	"reflect"
 )
@@ -15,8 +14,6 @@ func (c *clientT) CallFunction(name string, params Params, resp interface{}) err
 }
 
 type callFnT struct {
-	client *clientT
-
 	name           string
 	params         Params
 	currentSession *sessionT
@@ -37,7 +34,6 @@ func (c *clientT) callFn(name string, params Params, resp interface{}, currentSe
 	}
 
 	cr := &callFnT{
-		client:         c,
 		name:           name,
 		params:         params,
 		currentSession: currentSession,
@@ -58,12 +54,7 @@ func (c *callFnT) method() string {
 }
 
 func (c *callFnT) endpoint() (string, error) {
-	u := url.URL{}
-	u.Scheme = "https"
-	u.Host = c.client.host
-	u.Path = path.Join(c.client.path, "functions", c.name)
-
-	return u.String(), nil
+	return path.Join("functions", c.name), nil
 }
 
 func (c *callFnT) body() (string, error) {

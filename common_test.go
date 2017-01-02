@@ -49,6 +49,6 @@ func teardownTestServer() {
 }
 
 func TestMain(m *testing.M) {
-	testClient = NewClient("app_id", "rest_key", "master_key", "api.parse.com", "/1")
+	testClient = NewClient("app_id", "rest_key", "master_key", "https://api.parse.com", "/1")
 	os.Exit(m.Run())
 }

@@ -38,8 +38,7 @@ func TestPayload(t *testing.T) {
 	}
 
 	cr := &createT{
-		client: testClient,
-		v:      &tu,
+		v: &tu,
 	}
 
 	e := map[string]interface{}{
@@ -179,7 +178,6 @@ type TestTypeOmitEmpty struct {
 
 func TestCreateOmitEmpty(t *testing.T) {
 	cr := &createT{
-		client: testClient,
 		v: &TestTypeOmitEmpty{
 			EmptyArrField:   []string{},
 			OEEmptyArrField: []string{},

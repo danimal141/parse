@@ -35,10 +35,10 @@ func TestEndpoint(t *testing.T) {
 		inst     interface{}
 		expected string
 	}{
-		{&User{}, "https://api.parse.com/1/users"},
-		{&CustomClass{}, "https://api.parse.com/1/classes/CustomClass"},
-		{&CustomClassCustomName{}, "https://api.parse.com/1/classes/customName"},
-		{&CustomClassCustomEndpoint{}, "https://api.parse.com/1/custom/class/endpoint"},
+		{&User{}, "users"},
+		{&CustomClass{}, "classes/CustomClass"},
+		{&CustomClassCustomName{}, "classes/customName"},
+		{&CustomClassCustomEndpoint{}, "custom/class/endpoint"},
 	}
 
 	for _, tc := range testCases {
@@ -65,10 +65,10 @@ func TestEndpointGet(t *testing.T) {
 		id       string
 		expected string
 	}{
-		{&User{}, "UserId1", "https://api.parse.com/1/users/UserId1"},
-		{&CustomClass{}, "Custom1", "https://api.parse.com/1/classes/CustomClass/Custom1"},
-		{&CustomClassCustomName{}, "CC2", "https://api.parse.com/1/classes/customName/CC2"},
-		{&CustomClassCustomEndpoint{}, "Cc3", "https://api.parse.com/1/custom/class/endpoint/Cc3"},
+		{&User{}, "UserId1", "users/UserId1"},
+		{&CustomClass{}, "Custom1", "classes/CustomClass/Custom1"},
+		{&CustomClassCustomName{}, "CC2", "classes/customName/CC2"},
+		{&CustomClassCustomEndpoint{}, "Cc3", "custom/class/endpoint/Cc3"},
 	}
 
 	ops := []opTypeT{otGet}

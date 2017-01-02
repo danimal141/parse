@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"net/url"
 	"path"
 	"reflect"
 	"time"
@@ -41,6 +40,43 @@ type iClassName interface {
 // method if implemented
 type iParseEp interface {
 	Endpoint() string
+}
+
+func getClassName(v interface{}) string {
+	if tmp, ok := v.(iClassName); ok {
+		return tmp.ClassName()
+	} else {
+		t := reflect.TypeOf(v)
+		return t.Elem().Name()
+	}
+}
+
+func getEndpointBase(v interface{}) string {
+	var inst interface{}
+	var p string
+
+	rt := reflect.TypeOf(v)
+	rt = rt.Elem()
+	if rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array {
+		rte := rt.Elem()
+		var rv reflect.Value
+		if rte.Kind() == reflect.Ptr {
+			rv = reflect.New(rte.Elem())
+		} else {
+			rv = reflect.New(rte)
+		}
+		inst = rv.Interface()
+	} else {
+		inst = v
+	}
+
+	if iv, ok := inst.(iParseEp); ok {
+		p = iv.Endpoint()
+	} else {
+		cname := getClassName(inst)
+		p = path.Join("classes", cname)
+	}
+	return p
 }
 
 // A base type containing fields common to all Parse types
@@ -505,43 +541,6 @@ func (d *Date) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func getClassName(v interface{}) string {
-	if tmp, ok := v.(iClassName); ok {
-		return tmp.ClassName()
-	} else {
-		t := reflect.TypeOf(v)
-		return t.Elem().Name()
-	}
-}
-
-func getEndpointBase(v interface{}) string {
-	var p string
-	var inst interface{}
-
-	rt := reflect.TypeOf(v)
-	rt = rt.Elem()
-	if rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array {
-		rte := rt.Elem()
-		var rv reflect.Value
-		if rte.Kind() == reflect.Ptr {
-			rv = reflect.New(rte.Elem())
-		} else {
-			rv = reflect.New(rte)
-		}
-		inst = rv.Interface()
-	} else {
-		inst = v
-	}
-
-	if iv, ok := inst.(iParseEp); ok {
-		p = iv.Endpoint()
-	} else {
-		cname := getClassName(inst)
-		p = path.Join("classes", cname)
-	}
-	return p
-}
-
 type Config map[string]interface{}
 
 // Retrieves the value associated with the given key, and,
@@ -739,7 +738,6 @@ func (c Config) Map(key string) Config {
 }
 
 type configRequestT struct {
-	client *clientT
 }
 
 func (c *configRequestT) method() string {
@@ -747,11 +745,7 @@ func (c *configRequestT) method() string {
 }
 
 func (c *configRequestT) endpoint() (string, error) {
-	u := url.URL{}
-	u.Scheme = "https"
-	u.Host = c.client.host
-	u.Path = path.Join(c.client.path, "config")
-	return u.String(), nil
+	return "config", nil
 }
 
 func (c *configRequestT) body() (string, error) {
@@ -771,7 +765,7 @@ func (c *configRequestT) contentType() string {
 }
 
 func (c *clientT) GetConfig() (Config, error) {
-	b, err := c.doRequest(&configRequestT{client: c})
+	b, err := c.doRequest(&configRequestT{})
 	if err != nil {
 		return nil, err
 	}

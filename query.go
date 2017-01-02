@@ -950,23 +950,18 @@ func (q *queryT) method() string {
 
 func (q *queryT) endpoint() (string, error) {
 	u := url.URL{}
-	p := path.Join(q.client.path, getEndpointBase(q.inst))
+	p := getEndpointBase(q.inst)
 
 	switch q.op {
 	case otGet:
 		p = path.Join(p, *q.instId)
 	}
-
 	qs, err := q.payload()
 	if err != nil {
 		return "", err
 	}
-
-	u.Scheme = "https"
-	u.Host = q.client.host
 	u.RawQuery = qs
 	u.Path = p
-
 	return u.String(), nil
 }
 

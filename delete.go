@@ -3,7 +3,6 @@ package parse
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"path"
 	"reflect"
 )
@@ -20,13 +19,15 @@ func (c *clientT) _delete(v interface{}, useMasterKey bool, currentSession *sess
 		return errors.New("v must be a non-nil pointer")
 	}
 
-	_, err := c.doRequest(&deleteT{inst: v, shouldUseMasterKey: useMasterKey, currentSession: currentSession, client: c})
+	_, err := c.doRequest(&deleteT{
+		inst:               v,
+		shouldUseMasterKey: useMasterKey,
+		currentSession:     currentSession,
+	})
 	return err
 }
 
 type deleteT struct {
-	client *clientT
-
 	inst               interface{}
 	shouldUseMasterKey bool
 	currentSession     *sessionT
@@ -50,13 +51,7 @@ func (d *deleteT) endpoint() (string, error) {
 		return "", fmt.Errorf("can not delete value - type has no Id field")
 	}
 
-	p := path.Join(d.client.path, getEndpointBase(d.inst))
-	u := url.URL{}
-	u.Scheme = "https"
-	u.Host = d.client.host
-	u.Path = path.Join(p, id)
-
-	return u.String(), nil
+	return path.Join(getEndpointBase(d.inst), id), nil
 }
 
 func (d *deleteT) body() (string, error) {

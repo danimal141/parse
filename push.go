@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
-	"path"
 	"time"
 )
 
@@ -111,12 +109,7 @@ func (p *pushT) method() string {
 }
 
 func (p *pushT) endpoint() (string, error) {
-	u := url.URL{}
-	u.Scheme = "https"
-	u.Host = p.client.host
-	u.Path = path.Join(p.client.path, "push")
-
-	return u.String(), nil
+	return "push", nil
 }
 
 func (p *pushT) body() (string, error) {

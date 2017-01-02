@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
-	"path"
 	"reflect"
 )
 
@@ -18,8 +17,6 @@ type Session interface {
 }
 
 type loginRequestT struct {
-	client *clientT
-
 	username string
 	password string
 	s        *sessionT
@@ -50,7 +47,7 @@ func (c *clientT) Login(username, password string, u interface{}) (Session, erro
 	}
 
 	s := &sessionT{user: user, client: c}
-	if b, err := c.doRequest(&loginRequestT{username: username, password: password, client: c}); err != nil {
+	if b, err := c.doRequest(&loginRequestT{username: username, password: password}); err != nil {
 		return nil, err
 	} else if st, err := handleLoginResponse(b, s.user); err != nil {
 		return nil, err
@@ -73,7 +70,7 @@ func (c *clientT) LoginFacebook(authData *FacebookAuthData, u interface{}) (Sess
 	}
 
 	s := &sessionT{user: user, client: c}
-	if b, err := c.doRequest(&loginRequestT{authdata: &AuthData{Facebook: authData}, client: c}); err != nil {
+	if b, err := c.doRequest(&loginRequestT{authdata: &AuthData{Facebook: authData}}); err != nil {
 		return nil, err
 	} else if st, err := handleLoginResponse(b, s.user); err != nil {
 		return nil, err
@@ -106,7 +103,6 @@ func (c *clientT) Become(st string, u interface{}) (Session, error) {
 			user:         user,
 			client:       c,
 		},
-		client: c,
 	}
 
 	if b, err := c.doRequest(r); err != nil {
@@ -162,16 +158,17 @@ func (l *loginRequestT) method() string {
 }
 
 func (l *loginRequestT) endpoint() (string, error) {
+	var p string
 	u := url.URL{}
-	u.Scheme = "https"
-	u.Host = l.client.host
+
 	if l.s != nil {
-		u.Path = path.Join(l.client.path, "users/me")
+		p = "users/me"
 	} else if l.authdata != nil {
-		u.Path = path.Join(l.client.path, "users")
+		p = "users"
 	} else {
-		u.Path = path.Join(l.client.path, "login")
+		p = "login"
 	}
+	u.Path = p
 
 	if l.username != "" && l.password != "" {
 		v := url.Values{}

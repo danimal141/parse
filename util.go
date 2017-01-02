@@ -3,6 +3,7 @@ package parse
 import (
 	"reflect"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -33,6 +34,10 @@ func parseTag(tag string) (name, options string) {
 	} else {
 		return parts[0], ""
 	}
+}
+
+func parseTime(s string) (time.Time, error) {
+	return time.Parse(time.RFC3339Nano, s)
 }
 
 func isEmptyValue(v reflect.Value) bool {

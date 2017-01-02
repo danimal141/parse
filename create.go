@@ -3,14 +3,10 @@ package parse
 import (
 	"encoding/json"
 	"errors"
-	"net/url"
-	"path"
 	"reflect"
 )
 
 type createT struct {
-	client *clientT
-
 	v                  interface{}
 	shouldUseMasterKey bool
 	currentSession     *sessionT
@@ -32,7 +28,6 @@ func (c *clientT) Create(v interface{}, useMasterKey bool) error {
 
 func (c *clientT) Signup(username string, password string, user interface{}) error {
 	cr := &createT{
-		client:             c,
 		v:                  user,
 		shouldUseMasterKey: false,
 		currentSession:     nil,
@@ -54,7 +49,6 @@ func (c *clientT) create(v interface{}, useMasterKey bool, currentSession *sessi
 	}
 
 	cr := &createT{
-		client:             c,
 		v:                  v,
 		shouldUseMasterKey: useMasterKey,
 		currentSession:     currentSession,
@@ -71,12 +65,7 @@ func (c *createT) method() string {
 }
 
 func (c *createT) endpoint() (string, error) {
-	u := url.URL{}
-	u.Scheme = "https"
-	u.Host = c.client.host
-	u.Path = path.Join(c.client.path, getEndpointBase(c.v))
-
-	return u.String(), nil
+	return getEndpointBase(c.v), nil
 }
 
 func (c *createT) body() (string, error) {

@@ -28,14 +28,14 @@ func TestEndpointDelete(t *testing.T) {
 		id       string
 		expected string
 	}{
-		{&User{Base: Base{Id: "UserId1"}}, "UserId1", "https://api.parse.com/1/users/UserId1"},
-		{&CustomClass{Base{Id: "Custom1"}}, "Custom1", "https://api.parse.com/1/classes/CustomClass/Custom1"},
-		{&CustomClassCustomName{Base{Id: "CC2"}}, "CC2", "https://api.parse.com/1/classes/customName/CC2"},
-		{&CustomClassCustomEndpoint{Base{Id: "Cc3"}}, "Cc3", "https://api.parse.com/1/custom/class/endpoint/Cc3"},
+		{&User{Base: Base{Id: "UserId1"}}, "UserId1", "users/UserId1"},
+		{&CustomClass{Base{Id: "Custom1"}}, "Custom1", "classes/CustomClass/Custom1"},
+		{&CustomClassCustomName{Base{Id: "CC2"}}, "CC2", "classes/customName/CC2"},
+		{&CustomClassCustomEndpoint{Base{Id: "Cc3"}}, "Cc3", "custom/class/endpoint/Cc3"},
 	}
 
 	for _, tc := range testCases {
-		d := &deleteT{inst: tc.inst, client: testClient}
+		d := &deleteT{inst: tc.inst}
 		actual, err := d.endpoint()
 		if err != nil {
 			t.Errorf("Unexpected error creating query: %v\n", err)

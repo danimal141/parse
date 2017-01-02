@@ -8,6 +8,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"path"
 	"reflect"
 	"strings"
 	"time"
@@ -37,11 +39,10 @@ type clientT struct {
 	appId     string
 	restKey   string
 	masterKey string
+	host      string
+	path      string
+	userAgent string
 
-	host string
-	path string
-
-	userAgent  string
 	httpClient *http.Client
 
 	limiter limiter
@@ -99,6 +100,13 @@ func (c *clientT) doRequest(op requestT) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	u, err := url.Parse(c.host + path.Join(c.path, ep))
+	if err != nil {
+		return nil, err
+	}
+	if u.Scheme == "" {
+		u.Scheme = "https"
+	}
 
 	method := op.method()
 	var body io.Reader
@@ -110,7 +118,7 @@ func (c *clientT) doRequest(op requestT) ([]byte, error) {
 		body = strings.NewReader(b)
 	}
 
-	req, err := http.NewRequest(method, ep, body)
+	req, err := http.NewRequest(method, u.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -466,8 +474,4 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 	}
 
 	return nil
-}
-
-func parseTime(s string) (time.Time, error) {
-	return time.Parse(time.RFC3339Nano, s)
 }
