@@ -123,7 +123,7 @@ func TestOperations(t *testing.T) {
 	eb, _ := json.Marshal(em)
 	_ = json.Unmarshal(eb, &expected)
 
-	b, err := u.(*updateT).body()
+	b, err := u.(*updateRequest).body()
 	if err != nil {
 		t.Errorf("error marshaling where: %v\n", err)
 		t.FailNow()

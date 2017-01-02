@@ -37,8 +37,8 @@ type PushNotification interface {
 	Send() error
 }
 
-type pushT struct {
-	client *clientT
+type pushRequest struct {
+	client *client
 
 	shouldUseMasterKey bool
 	channels           []string
@@ -50,7 +50,7 @@ type pushT struct {
 }
 
 // Convenience function for creating a new query for use in SendPush.
-func (c *clientT) NewPushQuery() Query {
+func (c *client) NewPushQuery() Query {
 	q, _ := c.NewQuery(&Installation{})
 	return q
 }
@@ -58,43 +58,43 @@ func (c *clientT) NewPushQuery() Query {
 // Create a new Push Notifaction
 //
 // See the Push Notification Guide for more details: https://www.parse.com/docs/push_guide#sending/REST
-func (c *clientT) NewPushNotification() PushNotification {
-	return &pushT{client: c}
+func (c *client) NewPushNotification() PushNotification {
+	return &pushRequest{client: c}
 }
 
-func (p *pushT) Where(q Query) PushNotification {
-	p.where = q.(*queryT).where
+func (p *pushRequest) Where(q Query) PushNotification {
+	p.where = q.(*queryRequest).where
 	return p
 }
 
-func (p *pushT) Channels(c ...string) PushNotification {
+func (p *pushRequest) Channels(c ...string) PushNotification {
 	p.channels = c
 	return p
 }
 
-func (p *pushT) PushTime(t time.Time) PushNotification {
+func (p *pushRequest) PushTime(t time.Time) PushNotification {
 	d := Date(t)
 	p.pushTime = &d
 	return p
 }
 
-func (p *pushT) ExpirationTime(t time.Time) PushNotification {
+func (p *pushRequest) ExpirationTime(t time.Time) PushNotification {
 	d := Date(t)
 	p.expirationTime = &d
 	return p
 }
 
-func (p *pushT) ExpirationInterval(d time.Duration) PushNotification {
+func (p *pushRequest) ExpirationInterval(d time.Duration) PushNotification {
 	p.expirationInterval = int64(d.Seconds())
 	return p
 }
 
-func (p *pushT) Data(d map[string]interface{}) PushNotification {
+func (p *pushRequest) Data(d map[string]interface{}) PushNotification {
 	p.data = d
 	return p
 }
 
-func (p *pushT) Send() error {
+func (p *pushRequest) Send() error {
 	b, err := p.client.doRequest(p)
 	data := map[string]interface{}{}
 	if err := json.Unmarshal(b, &data); err != nil {
@@ -104,15 +104,15 @@ func (p *pushT) Send() error {
 	return err
 }
 
-func (p *pushT) method() string {
+func (p *pushRequest) method() string {
 	return "POST"
 }
 
-func (p *pushT) endpoint() (string, error) {
+func (p *pushRequest) endpoint() (string, error) {
 	return "push", nil
 }
 
-func (p *pushT) body() (string, error) {
+func (p *pushRequest) body() (string, error) {
 	if p.expirationTime != nil && p.expirationInterval > 0 {
 		return "", errors.New("cannot use both expiration_time and expiration_interval")
 	}
@@ -137,14 +137,14 @@ func (p *pushT) body() (string, error) {
 	return string(payload), err
 }
 
-func (p *pushT) useMasterKey() bool {
+func (p *pushRequest) useMasterKey() bool {
 	return p.shouldUseMasterKey
 }
 
-func (p *pushT) session() *sessionT {
+func (p *pushRequest) session() *session {
 	return nil
 }
 
-func (p *pushT) contentType() string {
+func (p *pushRequest) contentType() string {
 	return "application/json"
 }

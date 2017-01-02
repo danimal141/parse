@@ -8,10 +8,10 @@ import (
 	"reflect"
 )
 
-type updateTypeT int
+type updateRequestype int
 
 const (
-	opSet updateTypeT = iota
+	opSet updateRequestype = iota
 	opIncr
 	opDelete
 	opAdd
@@ -21,7 +21,7 @@ const (
 	opRemoveRelation
 )
 
-func (u updateTypeT) String() string {
+func (u updateRequestype) String() string {
 	switch u {
 	case opSet:
 		return "Set"
@@ -44,7 +44,7 @@ func (u updateTypeT) String() string {
 	return "Unknown"
 }
 
-func (u updateTypeT) argKey() string {
+func (u updateRequestype) argKey() string {
 	switch u {
 	case opIncr:
 		return "amount"
@@ -55,12 +55,12 @@ func (u updateTypeT) argKey() string {
 	return "unknown"
 }
 
-type updateOpT struct {
-	UpdateType updateTypeT
+type updateOp struct {
+	UpdateType updateRequestype
 	Value      interface{}
 }
 
-func (u updateOpT) MarshalJSON() ([]byte, error) {
+func (u updateOp) MarshalJSON() ([]byte, error) {
 	switch u.UpdateType {
 	case opSet:
 		return json.Marshal(u.Value)
@@ -109,71 +109,71 @@ type Update interface {
 	// on the provided value with their repective new values
 	Execute() error
 
-	requestT
+	request
 }
 
-type updateT struct {
-	client *clientT
+type updateRequest struct {
+	client *client
 
 	inst               interface{}
-	values             map[string]updateOpT
+	values             map[string]updateOp
 	shouldUseMasterKey bool
-	currentSession     *sessionT
+	currentSession     *session
 }
 
 // Create a new update request for the Parse object represented by v.
 //
 // Note: v should be a pointer to a struct whose name represents a Parse class,
 // or that implements the ClassName method
-func (c *clientT) NewUpdate(v interface{}) (Update, error) {
+func (c *client) NewUpdate(v interface{}) (Update, error) {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return nil, errors.New("v must be a non-nil pointer")
 	}
 
-	return &updateT{
+	return &updateRequest{
 		client: c,
 		inst:   v,
-		values: map[string]updateOpT{},
+		values: map[string]updateOp{},
 	}, nil
 }
 
-func (u *updateT) Set(f string, v interface{}) Update {
-	u.values[f] = updateOpT{UpdateType: opSet, Value: encodeForRequest(v)}
+func (u *updateRequest) Set(f string, v interface{}) Update {
+	u.values[f] = updateOp{UpdateType: opSet, Value: encodeForRequest(v)}
 	return u
 }
 
-func (u *updateT) Increment(f string, v interface{}) Update {
-	u.values[f] = updateOpT{UpdateType: opIncr, Value: v}
+func (u *updateRequest) Increment(f string, v interface{}) Update {
+	u.values[f] = updateOp{UpdateType: opIncr, Value: v}
 	return u
 }
 
-func (u *updateT) Delete(f string) Update {
-	u.values[f] = updateOpT{UpdateType: opDelete}
+func (u *updateRequest) Delete(f string) Update {
+	u.values[f] = updateOp{UpdateType: opDelete}
 	return u
 }
 
-func (u *updateT) Add(f string, vs ...interface{}) Update {
-	u.values[f] = updateOpT{UpdateType: opAdd, Value: vs}
+func (u *updateRequest) Add(f string, vs ...interface{}) Update {
+	u.values[f] = updateOp{UpdateType: opAdd, Value: vs}
 	return u
 }
 
-func (u *updateT) AddUnique(f string, vs ...interface{}) Update {
-	u.values[f] = updateOpT{UpdateType: opAddUnique, Value: vs}
+func (u *updateRequest) AddUnique(f string, vs ...interface{}) Update {
+	u.values[f] = updateOp{UpdateType: opAddUnique, Value: vs}
 	return u
 }
 
-func (u *updateT) Remove(f string, vs ...interface{}) Update {
-	u.values[f] = updateOpT{UpdateType: opRemove, Value: vs}
+func (u *updateRequest) Remove(f string, vs ...interface{}) Update {
+	u.values[f] = updateOp{UpdateType: opRemove, Value: vs}
 	return u
 }
 
-func (u *updateT) SetACL(a ACL) Update {
-	u.values["ACL"] = updateOpT{UpdateType: opSet, Value: a}
+func (u *updateRequest) SetACL(a ACL) Update {
+	u.values["ACL"] = updateOp{UpdateType: opSet, Value: a}
 	return u
 }
 
-func (u *updateT) Execute() (err error) {
+func (u *updateRequest) Execute() (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			if e, ok := r.(error); ok {
@@ -259,16 +259,16 @@ func (u *updateT) Execute() (err error) {
 	}
 }
 
-func (u *updateT) UseMasterKey() Update {
+func (u *updateRequest) UseMasterKey() Update {
 	u.shouldUseMasterKey = true
 	return u
 }
 
-func (u *updateT) method() string {
+func (u *updateRequest) method() string {
 	return "PUT"
 }
 
-func (u *updateT) endpoint() (string, error) {
+func (u *updateRequest) endpoint() (string, error) {
 	p := getEndpointBase(u.inst)
 
 	rv := reflect.ValueOf(u.inst)
@@ -286,7 +286,7 @@ func (u *updateT) endpoint() (string, error) {
 	return p, nil
 }
 
-func (u *updateT) body() (string, error) {
+func (u *updateRequest) body() (string, error) {
 	b, err := json.Marshal(u.values)
 	if err != nil {
 		return "", err
@@ -295,19 +295,19 @@ func (u *updateT) body() (string, error) {
 	return string(b), nil
 }
 
-func (u *updateT) useMasterKey() bool {
+func (u *updateRequest) useMasterKey() bool {
 	return u.shouldUseMasterKey
 }
 
-func (u *updateT) session() *sessionT {
+func (u *updateRequest) session() *session {
 	return u.currentSession
 }
 
-func (u *updateT) contentType() string {
+func (u *updateRequest) contentType() string {
 	return "application/json"
 }
 
-func (c *clientT) LinkFacebookAccount(u *User, a *FacebookAuthData) error {
+func (c *client) LinkFacebookAccount(u *User, a *FacebookAuthData) error {
 	if u.Id == "" {
 		return errors.New("user Id field must not be empty")
 	}

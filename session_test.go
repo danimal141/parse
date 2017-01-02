@@ -29,7 +29,7 @@ func TestLogin(t *testing.T) {
 		t.FailNow()
 	}
 
-	st := s.(*sessionT)
+	st := s.(*session)
 	if st.sessionToken != "abcd" {
 		t.Errorf("login did not set a proper session token. got: [%v] expected: [%v]\n", st.sessionToken, "abcd")
 	}
@@ -78,7 +78,7 @@ func TestLoginCustomUserType(t *testing.T) {
 		t.FailNow()
 	}
 
-	st := s.(*sessionT)
+	st := s.(*session)
 	if st.sessionToken != "abcd" {
 		t.Errorf("login did not set a proper session token. got: [%v] expected: [%v]\n", st.sessionToken, "abcd")
 	}
@@ -137,7 +137,7 @@ func TestSessionOperationsSetSessionTokenHeader(t *testing.T) {
 	})
 
 	var s Session
-	s = &sessionT{
+	s = &session{
 		client:       testClient,
 		user:         &User{},
 		sessionToken: "session_token",

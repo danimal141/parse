@@ -13,10 +13,10 @@ import (
 	"time"
 )
 
-type opTypeT int
+type opType int
 
 const (
-	otInval opTypeT = iota
+	otInval opType = iota
 	otGet
 	otQuery
 )
@@ -216,14 +216,14 @@ type Query interface {
 	// Retrieve the number of results that satisfy the given query
 	Count() (int64, error)
 
-	requestT
+	request
 }
 
-type queryT struct {
-	client *clientT
+type queryRequest struct {
+	client *client
 
 	inst interface{}
-	op   opTypeT
+	op   opType
 
 	instId    *string
 	orderBy   []string
@@ -236,19 +236,19 @@ type queryT struct {
 	keys      map[string]struct{}
 	className string
 
-	currentSession *sessionT
+	currentSession *session
 
 	shouldUseMasterKey bool
 }
 
 // Create a new query instance.
-func (c *clientT) NewQuery(v interface{}) (Query, error) {
+func (c *client) NewQuery(v interface{}) (Query, error) {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return nil, errors.New("v must be a non-nil pointer")
 	}
 
-	return &queryT{
+	return &queryRequest{
 		client:    c,
 		inst:      v,
 		orderBy:   make([]string, 0),
@@ -259,12 +259,12 @@ func (c *clientT) NewQuery(v interface{}) (Query, error) {
 	}, nil
 }
 
-func (q *queryT) UseMasterKey() Query {
+func (q *queryRequest) UseMasterKey() Query {
 	q.shouldUseMasterKey = true
 	return q
 }
 
-func (q *queryT) Get(id string) error {
+func (q *queryRequest) Get(id string) error {
 	q.op = otGet
 	q.instId = &id
 	if body, err := q.client.doRequest(q); err != nil {
@@ -274,42 +274,42 @@ func (q *queryT) Get(id string) error {
 	}
 }
 
-func (q *queryT) OrderBy(fs ...string) Query {
+func (q *queryRequest) OrderBy(fs ...string) Query {
 	q.orderBy = append(make([]string, 0, len(fs)), fs...)
 	return q
 }
 
-func (q *queryT) Limit(l int) Query {
+func (q *queryRequest) Limit(l int) Query {
 	q.limit = &l
 	return q
 }
 
-func (q *queryT) Skip(s int) Query {
+func (q *queryRequest) Skip(s int) Query {
 	q.skip = &s
 	return q
 }
 
-func (q *queryT) Include(fs ...string) Query {
+func (q *queryRequest) Include(fs ...string) Query {
 	for _, f := range fs {
 		q.include[f] = struct{}{}
 	}
 	return q
 }
 
-func (q *queryT) Keys(fs ...string) Query {
+func (q *queryRequest) Keys(fs ...string) Query {
 	for _, f := range fs {
 		q.keys[f] = struct{}{}
 	}
 	return q
 }
 
-func (q *queryT) EqualTo(f string, v interface{}) Query {
+func (q *queryRequest) EqualTo(f string, v interface{}) Query {
 	qv := encodeForRequest(v)
 	q.where[f] = qv
 	return q
 }
 
-func (q *queryT) NotEqualTo(f string, v interface{}) Query {
+func (q *queryRequest) NotEqualTo(f string, v interface{}) Query {
 	qv := encodeForRequest(v)
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
@@ -324,7 +324,7 @@ func (q *queryT) NotEqualTo(f string, v interface{}) Query {
 	return q
 }
 
-func (q *queryT) GreaterThan(f string, v interface{}) Query {
+func (q *queryRequest) GreaterThan(f string, v interface{}) Query {
 	var qv interface{}
 	if t, ok := v.(time.Time); ok {
 		qv = Date(t)
@@ -347,7 +347,7 @@ func (q *queryT) GreaterThan(f string, v interface{}) Query {
 	return q
 }
 
-func (q *queryT) GreaterThanOrEqual(f string, v interface{}) Query {
+func (q *queryRequest) GreaterThanOrEqual(f string, v interface{}) Query {
 	var qv interface{}
 	if t, ok := v.(time.Time); ok {
 		qv = Date(t)
@@ -370,7 +370,7 @@ func (q *queryT) GreaterThanOrEqual(f string, v interface{}) Query {
 	return q
 }
 
-func (q *queryT) LessThan(f string, v interface{}) Query {
+func (q *queryRequest) LessThan(f string, v interface{}) Query {
 	var qv interface{}
 	if t, ok := v.(time.Time); ok {
 		qv = Date(t)
@@ -393,7 +393,7 @@ func (q *queryT) LessThan(f string, v interface{}) Query {
 	return q
 }
 
-func (q *queryT) LessThanOrEqual(f string, v interface{}) Query {
+func (q *queryRequest) LessThanOrEqual(f string, v interface{}) Query {
 	var qv interface{}
 	if t, ok := v.(time.Time); ok {
 		qv = Date(t)
@@ -416,7 +416,7 @@ func (q *queryT) LessThanOrEqual(f string, v interface{}) Query {
 	return q
 }
 
-func (q *queryT) In(f string, vs ...interface{}) Query {
+func (q *queryRequest) In(f string, vs ...interface{}) Query {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$in"] = vs
@@ -430,7 +430,7 @@ func (q *queryT) In(f string, vs ...interface{}) Query {
 	return q
 }
 
-func (q *queryT) NotIn(f string, vs ...interface{}) Query {
+func (q *queryRequest) NotIn(f string, vs ...interface{}) Query {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$nin"] = vs
@@ -444,7 +444,7 @@ func (q *queryT) NotIn(f string, vs ...interface{}) Query {
 	return q
 }
 
-func (q *queryT) Exists(f string) Query {
+func (q *queryRequest) Exists(f string) Query {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$exists"] = true
@@ -458,7 +458,7 @@ func (q *queryT) Exists(f string) Query {
 	return q
 }
 
-func (q *queryT) DoesNotExist(f string) Query {
+func (q *queryRequest) DoesNotExist(f string) Query {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$exists"] = false
@@ -472,7 +472,7 @@ func (q *queryT) DoesNotExist(f string) Query {
 	return q
 }
 
-func (q *queryT) All(f string, vs ...interface{}) Query {
+func (q *queryRequest) All(f string, vs ...interface{}) Query {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$all"] = vs
@@ -486,7 +486,7 @@ func (q *queryT) All(f string, vs ...interface{}) Query {
 	return q
 }
 
-func (q *queryT) Contains(f string, v string) Query {
+func (q *queryRequest) Contains(f string, v string) Query {
 	v = quote(v)
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
@@ -501,7 +501,7 @@ func (q *queryT) Contains(f string, v string) Query {
 	return q
 }
 
-func (q *queryT) StartsWith(f string, v string) Query {
+func (q *queryRequest) StartsWith(f string, v string) Query {
 	v = "^" + quote(v)
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
@@ -516,7 +516,7 @@ func (q *queryT) StartsWith(f string, v string) Query {
 	return q
 }
 
-func (q *queryT) EndsWith(f string, v string) Query {
+func (q *queryRequest) EndsWith(f string, v string) Query {
 	v = quote(v) + "$"
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
@@ -531,7 +531,7 @@ func (q *queryT) EndsWith(f string, v string) Query {
 	return q
 }
 
-func (q *queryT) Matches(f string, v string, ignoreCase bool, multiLine bool) Query {
+func (q *queryRequest) Matches(f string, v string, ignoreCase bool, multiLine bool) Query {
 	v = quote(v)
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
@@ -563,7 +563,7 @@ func (q *queryT) Matches(f string, v string, ignoreCase bool, multiLine bool) Qu
 	return q
 }
 
-func (q *queryT) WithinGeoBox(f string, sw GeoPoint, ne GeoPoint) Query {
+func (q *queryRequest) WithinGeoBox(f string, sw GeoPoint, ne GeoPoint) Query {
 	q.where[f] = map[string]interface{}{
 		"$within": map[string]interface{}{
 			"$box": []GeoPoint{sw, ne},
@@ -572,14 +572,14 @@ func (q *queryT) WithinGeoBox(f string, sw GeoPoint, ne GeoPoint) Query {
 	return q
 }
 
-func (q *queryT) Near(f string, g GeoPoint) Query {
+func (q *queryRequest) Near(f string, g GeoPoint) Query {
 	q.where[f] = map[string]interface{}{
 		"$nearSphere": g,
 	}
 	return q
 }
 
-func (q *queryT) WithinMiles(f string, g GeoPoint, m float64) Query {
+func (q *queryRequest) WithinMiles(f string, g GeoPoint, m float64) Query {
 	q.where[f] = map[string]interface{}{
 		"$nearSphere":         g,
 		"$maxDistanceInMiles": m,
@@ -587,7 +587,7 @@ func (q *queryT) WithinMiles(f string, g GeoPoint, m float64) Query {
 	return q
 }
 
-func (q *queryT) WithinKilometers(f string, g GeoPoint, k float64) Query {
+func (q *queryRequest) WithinKilometers(f string, g GeoPoint, k float64) Query {
 	q.where[f] = map[string]interface{}{
 		"$nearSphere":              g,
 		"$maxDistanceInKilometers": k,
@@ -595,7 +595,7 @@ func (q *queryT) WithinKilometers(f string, g GeoPoint, k float64) Query {
 	return q
 }
 
-func (q *queryT) WithinRadians(f string, g GeoPoint, r float64) Query {
+func (q *queryRequest) WithinRadians(f string, g GeoPoint, r float64) Query {
 	q.where[f] = map[string]interface{}{
 		"$nearSphere":           g,
 		"$maxDistanceInRadians": r,
@@ -603,9 +603,9 @@ func (q *queryT) WithinRadians(f string, g GeoPoint, r float64) Query {
 	return q
 }
 
-func (q *queryT) MatchesKeyInQuery(f, qk string, sq Query) Query {
-	var sqt *queryT
-	if tmp, ok := sq.(*queryT); ok {
+func (q *queryRequest) MatchesKeyInQuery(f, qk string, sq Query) Query {
+	var sqt *queryRequest
+	if tmp, ok := sq.(*queryRequest); ok {
 		sqt = tmp
 	}
 
@@ -618,9 +618,9 @@ func (q *queryT) MatchesKeyInQuery(f, qk string, sq Query) Query {
 	return q
 }
 
-func (q *queryT) DoesNotMatchKeyInQuery(f string, qk string, sq Query) Query {
-	var sqt *queryT
-	if tmp, ok := sq.(*queryT); ok {
+func (q *queryRequest) DoesNotMatchKeyInQuery(f string, qk string, sq Query) Query {
+	var sqt *queryRequest
+	if tmp, ok := sq.(*queryRequest); ok {
 		sqt = tmp
 	}
 
@@ -633,22 +633,22 @@ func (q *queryT) DoesNotMatchKeyInQuery(f string, qk string, sq Query) Query {
 	return q
 }
 
-func (q *queryT) MatchesQuery(f string, sq Query) Query {
+func (q *queryRequest) MatchesQuery(f string, sq Query) Query {
 	q.where[f] = map[string]interface{}{
 		"$inQuery": sq,
 	}
 	return q
 }
 
-func (q *queryT) DoesNotMatchQuery(f string, sq Query) Query {
+func (q *queryRequest) DoesNotMatchQuery(f string, sq Query) Query {
 	q.where[f] = map[string]interface{}{
 		"$notInQuery": sq,
 	}
 	return q
 }
 
-func (q *queryT) Clone() Query {
-	nq := queryT{
+func (q *queryRequest) Clone() Query {
+	nq := queryRequest{
 		inst:               q.inst,
 		op:                 q.op,
 		instId:             q.instId,
@@ -696,15 +696,15 @@ func (q *queryT) Clone() Query {
 	return &nq
 }
 
-func (q *queryT) Sub() Query {
+func (q *queryRequest) Sub() Query {
 	q2, _ := q.client.NewQuery(q.inst)
 	return q2
 }
 
-func (q *queryT) Or(qs ...Query) Query {
+func (q *queryRequest) Or(qs ...Query) Query {
 	or := make([]map[string]interface{}, 0, len(qs))
 	for _, qi := range qs {
-		if qt, ok := qi.(*queryT); ok {
+		if qt, ok := qi.(*queryRequest); ok {
 			or = append(or, qt.where)
 		}
 	}
@@ -714,7 +714,7 @@ func (q *queryT) Or(qs ...Query) Query {
 
 var chanInterfaceType = reflect.TypeOf(make(chan interface{}, 0))
 
-func (q *queryT) Each(rc interface{}) (*Iterator, error) {
+func (q *queryRequest) Each(rc interface{}) (*Iterator, error) {
 	instType := reflect.TypeOf(q.inst)
 	rv := reflect.ValueOf(rc)
 	rt := rv.Type()
@@ -828,7 +828,7 @@ func (q *queryT) Each(rc interface{}) (*Iterator, error) {
 	return i, nil
 }
 
-func (q *queryT) SetBatchSize(size uint) Query {
+func (q *queryRequest) SetBatchSize(size uint) Query {
 	if size <= 1000 {
 		q.batchSize = int(size)
 	} else {
@@ -837,7 +837,7 @@ func (q *queryT) SetBatchSize(size uint) Query {
 	return q
 }
 
-func (q *queryT) Find() error {
+func (q *queryRequest) Find() error {
 	q.op = otQuery
 	if b, err := q.client.doRequest(q); err != nil {
 		return err
@@ -846,7 +846,7 @@ func (q *queryT) Find() error {
 	}
 }
 
-func (q *queryT) First() error {
+func (q *queryRequest) First() error {
 	q.op = otQuery
 	l := 1
 	q.limit = &l
@@ -880,7 +880,7 @@ func (q *queryT) First() error {
 	return nil
 }
 
-func (q *queryT) Count() (int64, error) {
+func (q *queryRequest) Count() (int64, error) {
 	l := 0
 	c := 1
 	q.limit = &l
@@ -895,7 +895,7 @@ func (q *queryT) Count() (int64, error) {
 	}
 }
 
-func (q *queryT) payload() (string, error) {
+func (q *queryRequest) payload() (string, error) {
 	p := url.Values{}
 	if len(q.where) > 0 {
 		w, err := json.Marshal(q.where)
@@ -944,11 +944,11 @@ func (q *queryT) payload() (string, error) {
 }
 
 // Implement the operationT interface
-func (q *queryT) method() string {
+func (q *queryRequest) method() string {
 	return "GET"
 }
 
-func (q *queryT) endpoint() (string, error) {
+func (q *queryRequest) endpoint() (string, error) {
 	u := url.URL{}
 	p := getEndpointBase(q.inst)
 
@@ -965,23 +965,23 @@ func (q *queryT) endpoint() (string, error) {
 	return u.String(), nil
 }
 
-func (q *queryT) body() (string, error) {
+func (q *queryRequest) body() (string, error) {
 	return "", nil
 }
 
-func (q *queryT) useMasterKey() bool {
+func (q *queryRequest) useMasterKey() bool {
 	return q.shouldUseMasterKey
 }
 
-func (q *queryT) session() *sessionT {
+func (q *queryRequest) session() *session {
 	return q.currentSession
 }
 
-func (q *queryT) contentType() string {
+func (q *queryRequest) contentType() string {
 	return "application/x-www-form-urlencoded"
 }
 
-func (q *queryT) MarshalJSON() ([]byte, error) {
+func (q *queryRequest) MarshalJSON() ([]byte, error) {
 	m := map[string]interface{}{}
 
 	if len(q.where) > 0 {

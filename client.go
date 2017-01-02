@@ -26,16 +26,16 @@ const (
 var fieldNameCache map[reflect.Type]map[string]string = make(map[reflect.Type]map[string]string)
 var fieldCache = make(map[reflect.Type]reflect.StructField)
 
-type requestT interface {
+type request interface {
 	method() string
 	endpoint() (string, error)
 	body() (string, error)
 	useMasterKey() bool
-	session() *sessionT
+	session() *session
 	contentType() string
 }
 
-type clientT struct {
+type client struct {
 	appId     string
 	restKey   string
 	masterKey string
@@ -49,8 +49,8 @@ type clientT struct {
 }
 
 // Initialize the parse library with your API keys
-func NewClient(appId, restKey, masterKey, host, path string) *clientT {
-	return &clientT{
+func NewClient(appId, restKey, masterKey, host, path string) *client {
+	return &client{
 		appId:      appId,
 		restKey:    restKey,
 		masterKey:  masterKey,
@@ -64,7 +64,7 @@ func NewClient(appId, restKey, masterKey, host, path string) *clientT {
 // Set the timeout for requests to Parse
 //
 // Returns an error if called before parse.Initialize
-func (c *clientT) SetHTTPTimeout(t time.Duration) error {
+func (c *client) SetHTTPTimeout(t time.Duration) error {
 	c.httpClient.Timeout = t
 	return nil
 }
@@ -72,7 +72,7 @@ func (c *clientT) SetHTTPTimeout(t time.Duration) error {
 // Set the User Agent to be specified for requests against Parse
 //
 // Returns an error if called before parse.Initialize
-func (c *clientT) SetUserAgent(ua string) error {
+func (c *client) SetUserAgent(ua string) error {
 	c.userAgent = ua
 	return nil
 }
@@ -85,17 +85,17 @@ func (c *clientT) SetUserAgent(ua string) error {
 // If this option is set, this library will restrict calling code to
 // a maximum number of requests per second. Requests exceeding this limit
 // will block for the appropriate period of time.
-func (c *clientT) SetRateLimit(limit, burst uint) error {
+func (c *client) SetRateLimit(limit, burst uint) error {
 	c.limiter = newRateLimiter(limit, burst)
 	return nil
 }
 
-func (c *clientT) SetHTTPClient(hc *http.Client) error {
+func (c *client) SetHTTPClient(hc *http.Client) error {
 	c.httpClient = hc
 	return nil
 }
 
-func (c *clientT) doRequest(op requestT) ([]byte, error) {
+func (c *client) doRequest(op request) ([]byte, error) {
 	ep, err := op.endpoint()
 	if err != nil {
 		return nil, err
@@ -169,11 +169,11 @@ func (c *clientT) doRequest(op requestT) ([]byte, error) {
 	// Error formats are consistent. If the response is an error,
 	// return a APIError
 	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
-		ret := apiErrorT{}
-		if err := json.Unmarshal(respBody, &ret); err != nil {
+		apiErr := apiError{}
+		if err := json.Unmarshal(respBody, &apiErr); err != nil {
 			return nil, err
 		}
-		return nil, &ret
+		return nil, &apiErr
 	}
 
 	return respBody, nil
@@ -402,7 +402,7 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 	case reflect.Interface:
 		if _, ok := dst.(*ACL); ok {
 			if a, ok := src.(map[string]interface{}); ok {
-				acl := aclT{
+				_acl := acl{
 					read:  map[string]bool{},
 					write: map[string]bool{},
 				}
@@ -410,21 +410,21 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 					avm := av.(map[string]interface{})
 					if ak == "*" {
 						if r, ok := avm["read"]; ok && r.(bool) {
-							acl.publicReadAccess = true
+							_acl.publicReadAccess = true
 						}
 						if w, ok := avm["write"]; ok && w.(bool) {
-							acl.publicWriteAccess = true
+							_acl.publicWriteAccess = true
 						}
 					} else {
 						if r, ok := avm["read"]; ok && r.(bool) {
-							acl.read[ak] = true
+							_acl.read[ak] = true
 						}
 						if w, ok := avm["write"]; ok && w.(bool) {
-							acl.write[ak] = true
+							_acl.write[ak] = true
 						}
 					}
 				}
-				dvi.Set(reflect.ValueOf(&acl))
+				dvi.Set(reflect.ValueOf(&_acl))
 			} else if _, ok := src.(ACL); ok {
 				dvi.Set(sv)
 			} else {

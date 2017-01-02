@@ -37,7 +37,7 @@ func TestPayload(t *testing.T) {
 		FCount:    11,
 	}
 
-	cr := &createT{
+	cr := &createRequest{
 		v: &tu,
 	}
 
@@ -177,7 +177,7 @@ type TestTypeOmitEmpty struct {
 }
 
 func TestCreateOmitEmpty(t *testing.T) {
-	cr := &createT{
+	cr := &createRequest{
 		v: &TestTypeOmitEmpty{
 			EmptyArrField:   []string{},
 			OEEmptyArrField: []string{},

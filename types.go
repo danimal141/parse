@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	gob.Register(&aclT{})
+	gob.Register(&acl{})
 }
 
 var registeredTypes = map[string]reflect.Type{}
@@ -24,7 +24,7 @@ var registeredTypes = map[string]reflect.Type{}
 // Implement this interface if your class name does not match your struct
 // name. If this class is not implemented, the name of the struct will
 // be used when interacting with the Parse API
-type iClassName interface {
+type classNamed interface {
 	ClassName() string
 }
 
@@ -38,12 +38,12 @@ type iClassName interface {
 //
 // /classes/{ClassName} - where {ClassName} is the name of the struct or the value returned by the ClassName
 // method if implemented
-type iParseEp interface {
+type epOwner interface {
 	Endpoint() string
 }
 
 func getClassName(v interface{}) string {
-	if tmp, ok := v.(iClassName); ok {
+	if tmp, ok := v.(classNamed); ok {
 		return tmp.ClassName()
 	} else {
 		t := reflect.TypeOf(v)
@@ -70,7 +70,7 @@ func getEndpointBase(v interface{}) string {
 		inst = v
 	}
 
-	if iv, ok := inst.(iParseEp); ok {
+	if iv, ok := inst.(epOwner); ok {
 		p = iv.Endpoint()
 	} else {
 		cname := getClassName(inst)
@@ -237,7 +237,7 @@ type ACL interface {
 	SetWriteAccess(userId string, allowed bool) ACL
 }
 
-type aclT struct {
+type acl struct {
 	publicReadAccess  bool
 	publicWriteAccess bool
 
@@ -246,87 +246,87 @@ type aclT struct {
 }
 
 func NewACL() ACL {
-	return &aclT{
+	return &acl{
 		write: map[string]bool{},
 		read:  map[string]bool{},
 	}
 }
 
-func (a *aclT) PublicReadAccess() bool {
+func (a *acl) PublicReadAccess() bool {
 	return a.publicReadAccess
 }
 
-func (a *aclT) PublicWriteAccess() bool {
+func (a *acl) PublicWriteAccess() bool {
 	return a.publicWriteAccess
 }
 
-func (a *aclT) RoleReadAccess(role string) bool {
+func (a *acl) RoleReadAccess(role string) bool {
 	if tmp, ok := a.read["role:"+role]; ok {
 		return tmp
 	}
 	return false
 }
 
-func (a *aclT) RoleWriteAccess(role string) bool {
+func (a *acl) RoleWriteAccess(role string) bool {
 	if tmp, ok := a.write["role:"+role]; ok {
 		return tmp
 	}
 	return false
 }
 
-func (a *aclT) ReadAccess(userId string) bool {
+func (a *acl) ReadAccess(userId string) bool {
 	if tmp, ok := a.read[userId]; ok {
 		return tmp
 	}
 	return false
 }
 
-func (a *aclT) WriteAccess(userId string) bool {
+func (a *acl) WriteAccess(userId string) bool {
 	if tmp, ok := a.write[userId]; ok {
 		return tmp
 	}
 	return false
 }
 
-func (a *aclT) SetPublicReadAccess(allowed bool) ACL {
+func (a *acl) SetPublicReadAccess(allowed bool) ACL {
 	a.publicReadAccess = allowed
 	return a
 }
 
-func (a *aclT) SetPublicWriteAccess(allowed bool) ACL {
+func (a *acl) SetPublicWriteAccess(allowed bool) ACL {
 	a.publicWriteAccess = allowed
 	return a
 }
 
-func (a *aclT) SetReadAccess(userId string, allowed bool) ACL {
+func (a *acl) SetReadAccess(userId string, allowed bool) ACL {
 	a.read[userId] = allowed
 	return a
 }
 
-func (a *aclT) SetWriteAccess(userId string, allowed bool) ACL {
+func (a *acl) SetWriteAccess(userId string, allowed bool) ACL {
 	a.write[userId] = allowed
 	return a
 }
 
-func (a *aclT) SetRoleReadAccess(role string, allowed bool) ACL {
+func (a *acl) SetRoleReadAccess(role string, allowed bool) ACL {
 	a.read["role:"+role] = allowed
 	return a
 }
 
-func (a *aclT) SetRoleWriteAccess(role string, allowed bool) ACL {
+func (a *acl) SetRoleWriteAccess(role string, allowed bool) ACL {
 	a.write["role:"+role] = allowed
 	return a
 }
 
-func (a *aclT) GobEncode() ([]byte, error) {
+func (a *acl) GobEncode() ([]byte, error) {
 	return json.Marshal(a)
 }
 
-func (a *aclT) GobDecode(b []byte) error {
+func (a *acl) GobDecode(b []byte) error {
 	return json.Unmarshal(b, &a)
 }
 
-func (a *aclT) MarshalJSON() ([]byte, error) {
+func (a *acl) MarshalJSON() ([]byte, error) {
 	m := map[string]map[string]bool{}
 
 	for k, v := range a.read {
@@ -368,7 +368,7 @@ func (a *aclT) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-func (a *aclT) UnmarshalJSON(b []byte) error {
+func (a *acl) UnmarshalJSON(b []byte) error {
 	m := map[string]map[string]bool{}
 
 	if err := json.Unmarshal(b, &m); err != nil {
@@ -737,35 +737,35 @@ func (c Config) Map(key string) Config {
 	return nil
 }
 
-type configRequestT struct {
+type configRequest struct {
 }
 
-func (c *configRequestT) method() string {
+func (c *configRequest) method() string {
 	return "GET"
 }
 
-func (c *configRequestT) endpoint() (string, error) {
+func (c *configRequest) endpoint() (string, error) {
 	return "config", nil
 }
 
-func (c *configRequestT) body() (string, error) {
+func (c *configRequest) body() (string, error) {
 	return "", nil
 }
 
-func (c *configRequestT) useMasterKey() bool {
+func (c *configRequest) useMasterKey() bool {
 	return false
 }
 
-func (c *configRequestT) session() *sessionT {
+func (c *configRequest) session() *session {
 	return nil
 }
 
-func (c *configRequestT) contentType() string {
+func (c *configRequest) contentType() string {
 	return ""
 }
 
-func (c *clientT) GetConfig() (Config, error) {
-	b, err := c.doRequest(&configRequestT{})
+func (c *client) GetConfig() (Config, error) {
+	b, err := c.doRequest(&configRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -852,9 +852,9 @@ func encodeForRequest(v interface{}) interface{} {
 		default:
 			var cname string
 
-			if tmp, ok := reflect.Zero(rvi.Type()).Interface().(iClassName); ok {
+			if tmp, ok := reflect.Zero(rvi.Type()).Interface().(classNamed); ok {
 				cname = tmp.ClassName()
-			} else if tmp, ok := reflect.New(rvi.Type()).Interface().(iClassName); ok {
+			} else if tmp, ok := reflect.New(rvi.Type()).Interface().(classNamed); ok {
 				cname = tmp.ClassName()
 			} else {
 				cname = rt.Name()

@@ -35,7 +35,7 @@ func TestEndpointDelete(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		d := &deleteT{inst: tc.inst}
+		d := &deleteRequest{inst: tc.inst}
 		actual, err := d.endpoint()
 		if err != nil {
 			t.Errorf("Unexpected error creating query: %v\n", err)

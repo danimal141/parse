@@ -9,17 +9,17 @@ import (
 
 // Delete the instance of the type represented by v from the Parse database. If
 // useMasteKey=true, the Master Key will be used for the deletion request.
-func (c *clientT) Delete(v interface{}, useMasterKey bool) error {
+func (c *client) Delete(v interface{}, useMasterKey bool) error {
 	return c._delete(v, useMasterKey, nil)
 }
 
-func (c *clientT) _delete(v interface{}, useMasterKey bool, currentSession *sessionT) error {
+func (c *client) _delete(v interface{}, useMasterKey bool, currentSession *session) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return errors.New("v must be a non-nil pointer")
 	}
 
-	_, err := c.doRequest(&deleteT{
+	_, err := c.doRequest(&deleteRequest{
 		inst:               v,
 		shouldUseMasterKey: useMasterKey,
 		currentSession:     currentSession,
@@ -27,17 +27,17 @@ func (c *clientT) _delete(v interface{}, useMasterKey bool, currentSession *sess
 	return err
 }
 
-type deleteT struct {
+type deleteRequest struct {
 	inst               interface{}
 	shouldUseMasterKey bool
-	currentSession     *sessionT
+	currentSession     *session
 }
 
-func (d *deleteT) method() string {
+func (d *deleteRequest) method() string {
 	return "DELETE"
 }
 
-func (d *deleteT) endpoint() (string, error) {
+func (d *deleteRequest) endpoint() (string, error) {
 	var id string
 	rv := reflect.ValueOf(d.inst)
 	rvi := reflect.Indirect(rv)
@@ -54,18 +54,18 @@ func (d *deleteT) endpoint() (string, error) {
 	return path.Join(getEndpointBase(d.inst), id), nil
 }
 
-func (d *deleteT) body() (string, error) {
+func (d *deleteRequest) body() (string, error) {
 	return "", nil
 }
 
-func (d *deleteT) useMasterKey() bool {
+func (d *deleteRequest) useMasterKey() bool {
 	return d.shouldUseMasterKey
 }
 
-func (d *deleteT) session() *sessionT {
+func (d *deleteRequest) session() *session {
 	return d.currentSession
 }
 
-func (d *deleteT) contentType() string {
+func (d *deleteRequest) contentType() string {
 	return "application/x-www-form-urlencoded"
 }

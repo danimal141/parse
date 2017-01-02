@@ -6,10 +6,10 @@ import (
 	"reflect"
 )
 
-type createT struct {
+type createRequest struct {
 	v                  interface{}
 	shouldUseMasterKey bool
-	currentSession     *sessionT
+	currentSession     *session
 
 	isUser   bool
 	username string
@@ -22,12 +22,12 @@ type createT struct {
 //
 // Note: v should be a pointer to a struct whose name represents a Parse class,
 // or that implements the ClassName method
-func (c *clientT) Create(v interface{}, useMasterKey bool) error {
+func (c *client) Create(v interface{}, useMasterKey bool) error {
 	return c.create(v, useMasterKey, nil)
 }
 
-func (c *clientT) Signup(username string, password string, user interface{}) error {
-	cr := &createT{
+func (c *client) Signup(username string, password string, user interface{}) error {
+	cr := &createRequest{
 		v:                  user,
 		shouldUseMasterKey: false,
 		currentSession:     nil,
@@ -42,13 +42,13 @@ func (c *clientT) Signup(username string, password string, user interface{}) err
 	}
 }
 
-func (c *clientT) create(v interface{}, useMasterKey bool, currentSession *sessionT) error {
+func (c *client) create(v interface{}, useMasterKey bool, currentSession *session) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return errors.New("v must be a non-nil pointer")
 	}
 
-	cr := &createT{
+	cr := &createRequest{
 		v:                  v,
 		shouldUseMasterKey: useMasterKey,
 		currentSession:     currentSession,
@@ -60,15 +60,15 @@ func (c *clientT) create(v interface{}, useMasterKey bool, currentSession *sessi
 	}
 }
 
-func (c *createT) method() string {
+func (c *createRequest) method() string {
 	return "POST"
 }
 
-func (c *createT) endpoint() (string, error) {
+func (c *createRequest) endpoint() (string, error) {
 	return getEndpointBase(c.v), nil
 }
 
-func (c *createT) body() (string, error) {
+func (c *createRequest) body() (string, error) {
 	payload := map[string]interface{}{}
 
 	if c.isUser {
@@ -115,14 +115,14 @@ func (c *createT) body() (string, error) {
 	return string(b), nil
 }
 
-func (c *createT) useMasterKey() bool {
+func (c *createRequest) useMasterKey() bool {
 	return c.shouldUseMasterKey
 }
 
-func (c *createT) session() *sessionT {
+func (c *createRequest) session() *session {
 	return c.currentSession
 }
 
-func (c *createT) contentType() string {
+func (c *createRequest) contentType() string {
 	return "application/json"
 }
