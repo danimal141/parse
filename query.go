@@ -163,7 +163,8 @@ type Query interface {
 	//
 	// E.g.:
 	//
-	// q, _ := parse.NewQuery(&parse.User{})
+	// cli := parse.NewClient("APP_ID", "REST_KEY", "MASTER_KEY", "HOST", "PATH")
+	// q, _ := cli.NewQuery(&parse.User{})
 	//
 	// sq1 := q.Sub().EqualTo("city", "Chicago")
 	//
@@ -194,8 +195,9 @@ type Query interface {
 	//
 	// E.g.:
 	//
+	// cli := parse.NewClient("APP_ID", "REST_KEY", "MASTER_KEY", "HOST", "PATH")
 	// users := make([]parse.User)
-	// q, _ := parse.NewQuery(&users)
+	// q, _ := cli.NewQuery(&users)
 	// q.EqualTo("city", "Chicago")
 	// q.OrderBy("-createdAt")
 	// q.Limit(20)
@@ -206,8 +208,10 @@ type Query interface {
 	// is assigned to the value provided to NewQuery.
 	//
 	// E.g.:
+	//
+	// cli := parse.NewClient("APP_ID", "REST_KEY", "MASTER_KEY", "HOST", "PATH")
 	// u := parse.User{}
-	// q, _ := parse.NewQuery(&u)
+	// q, _ := cli.NewQuery(&u)
 	// q.EqualTo("city", "Chicago")
 	// q.OrderBy("-createdAt")
 	// q.First() // Retrieve the newest user in Chicago
