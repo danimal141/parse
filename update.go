@@ -79,31 +79,31 @@ func (u updateOp) MarshalJSON() ([]byte, error) {
 type Update interface {
 
 	//Set the field specified by f to the value of v
-	Set(f string, v interface{}) Update
+	Set(f string, v interface{})
 
 	// Increment the field specified by f by the amount specified by v.
 	// v should be a numeric type
-	Increment(f string, v interface{}) Update
+	Increment(f string, v interface{})
 
 	// Delete the field specified by f from the instance being updated
-	Delete(f string) Update
+	Delete(f string)
 
 	// Append the values provided to the Array field specified by f. This operation
 	// is atomic
-	Add(f string, vs ...interface{}) Update
+	Add(f string, vs ...interface{})
 
 	// Add any values provided that were not alread present to the Array field
 	// specified by f. This operation is atomic
-	AddUnique(f string, vs ...interface{}) Update
+	AddUnique(f string, vs ...interface{})
 
 	// Remove the provided values from the array field specified by f
-	Remove(f string, vs ...interface{}) Update
+	Remove(f string, vs ...interface{})
 
 	// Update the ACL on the given object
-	SetACL(a ACL) Update
+	SetACL(a ACL)
 
 	// Use the Master Key for this update request
-	UseMasterKey() Update
+	UseMasterKey()
 
 	// Execute this update. This method also updates the proper fields
 	// on the provided value with their repective new values
@@ -138,39 +138,32 @@ func (c *Client) NewUpdate(v interface{}) (Update, error) {
 	}, nil
 }
 
-func (u *updateRequest) Set(f string, v interface{}) Update {
+func (u *updateRequest) Set(f string, v interface{}) {
 	u.values[f] = updateOp{UpdateType: opSet, Value: encodeForRequest(v)}
-	return u
 }
 
-func (u *updateRequest) Increment(f string, v interface{}) Update {
+func (u *updateRequest) Increment(f string, v interface{}) {
 	u.values[f] = updateOp{UpdateType: opIncr, Value: v}
-	return u
 }
 
-func (u *updateRequest) Delete(f string) Update {
+func (u *updateRequest) Delete(f string) {
 	u.values[f] = updateOp{UpdateType: opDelete}
-	return u
 }
 
-func (u *updateRequest) Add(f string, vs ...interface{}) Update {
+func (u *updateRequest) Add(f string, vs ...interface{}) {
 	u.values[f] = updateOp{UpdateType: opAdd, Value: vs}
-	return u
 }
 
-func (u *updateRequest) AddUnique(f string, vs ...interface{}) Update {
+func (u *updateRequest) AddUnique(f string, vs ...interface{}) {
 	u.values[f] = updateOp{UpdateType: opAddUnique, Value: vs}
-	return u
 }
 
-func (u *updateRequest) Remove(f string, vs ...interface{}) Update {
+func (u *updateRequest) Remove(f string, vs ...interface{}) {
 	u.values[f] = updateOp{UpdateType: opRemove, Value: vs}
-	return u
 }
 
-func (u *updateRequest) SetACL(a ACL) Update {
+func (u *updateRequest) SetACL(a ACL) {
 	u.values["ACL"] = updateOp{UpdateType: opSet, Value: a}
-	return u
 }
 
 func (u *updateRequest) Execute() (err error) {
@@ -259,9 +252,8 @@ func (u *updateRequest) Execute() (err error) {
 	}
 }
 
-func (u *updateRequest) UseMasterKey() Update {
+func (u *updateRequest) UseMasterKey() {
 	u.shouldUseMasterKey = true
-	return u
 }
 
 func (u *updateRequest) method() string {

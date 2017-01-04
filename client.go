@@ -45,8 +45,7 @@ type Client struct {
 	userAgent string
 
 	httpClient *http.Client
-
-	limiter limiter
+	limiter    limiter
 }
 
 // Initialize the parse library with your API keys
