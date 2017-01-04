@@ -24,7 +24,7 @@ var registeredTypes = map[string]reflect.Type{}
 // Implement this interface if your class name does not match your struct
 // name. If this class is not implemented, the name of the struct will
 // be used when interacting with the Parse API
-type classNamed interface {
+type HasClassName interface {
 	ClassName() string
 }
 
@@ -38,12 +38,12 @@ type classNamed interface {
 //
 // /classes/{ClassName} - where {ClassName} is the name of the struct or the value returned by the ClassName
 // method if implemented
-type epOwner interface {
+type HasEndpoint interface {
 	Endpoint() string
 }
 
 func getClassName(v interface{}) string {
-	if tmp, ok := v.(classNamed); ok {
+	if tmp, ok := v.(HasClassName); ok {
 		return tmp.ClassName()
 	} else {
 		t := reflect.TypeOf(v)
@@ -70,7 +70,7 @@ func getEndpointBase(v interface{}) string {
 		inst = v
 	}
 
-	if iv, ok := inst.(epOwner); ok {
+	if iv, ok := inst.(HasEndpoint); ok {
 		p = iv.Endpoint()
 	} else {
 		cname := getClassName(inst)
@@ -852,9 +852,9 @@ func encodeForRequest(v interface{}) interface{} {
 		default:
 			var cname string
 
-			if tmp, ok := reflect.Zero(rvi.Type()).Interface().(classNamed); ok {
+			if tmp, ok := reflect.Zero(rvi.Type()).Interface().(HasClassName); ok {
 				cname = tmp.ClassName()
-			} else if tmp, ok := reflect.New(rvi.Type()).Interface().(classNamed); ok {
+			} else if tmp, ok := reflect.New(rvi.Type()).Interface().(HasClassName); ok {
 				cname = tmp.ClassName()
 			} else {
 				cname = rt.Name()
