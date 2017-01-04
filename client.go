@@ -35,7 +35,8 @@ type request interface {
 	contentType() string
 }
 
-type client struct {
+// A Client manages communication with the Parse server.
+type Client struct {
 	appId     string
 	restKey   string
 	masterKey string
@@ -49,8 +50,8 @@ type client struct {
 }
 
 // Initialize the parse library with your API keys
-func NewClient(appId, restKey, masterKey, host, path string) *client {
-	return &client{
+func NewClient(appId, restKey, masterKey, host, path string) *Client {
+	return &Client{
 		appId:      appId,
 		restKey:    restKey,
 		masterKey:  masterKey,
@@ -64,7 +65,7 @@ func NewClient(appId, restKey, masterKey, host, path string) *client {
 // Set the timeout for requests to Parse
 //
 // Returns an error if called before parse.Initialize
-func (c *client) SetHTTPTimeout(t time.Duration) error {
+func (c *Client) SetHTTPTimeout(t time.Duration) error {
 	c.httpClient.Timeout = t
 	return nil
 }
@@ -72,7 +73,7 @@ func (c *client) SetHTTPTimeout(t time.Duration) error {
 // Set the User Agent to be specified for requests against Parse
 //
 // Returns an error if called before parse.Initialize
-func (c *client) SetUserAgent(ua string) error {
+func (c *Client) SetUserAgent(ua string) error {
 	c.userAgent = ua
 	return nil
 }
@@ -85,17 +86,17 @@ func (c *client) SetUserAgent(ua string) error {
 // If this option is set, this library will restrict calling code to
 // a maximum number of requests per second. Requests exceeding this limit
 // will block for the appropriate period of time.
-func (c *client) SetRateLimit(limit, burst uint) error {
+func (c *Client) SetRateLimit(limit, burst uint) error {
 	c.limiter = newRateLimiter(limit, burst)
 	return nil
 }
 
-func (c *client) SetHTTPClient(hc *http.Client) error {
+func (c *Client) SetHTTPClient(hc *http.Client) error {
 	c.httpClient = hc
 	return nil
 }
 
-func (c *client) doRequest(op request) ([]byte, error) {
+func (c *Client) doRequest(op request) ([]byte, error) {
 	ep, err := op.endpoint()
 	if err != nil {
 		return nil, err

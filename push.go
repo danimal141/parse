@@ -38,7 +38,7 @@ type PushNotification interface {
 }
 
 type pushRequest struct {
-	client *client
+	client *Client
 
 	shouldUseMasterKey bool
 	channels           []string
@@ -50,7 +50,7 @@ type pushRequest struct {
 }
 
 // Convenience function for creating a new query for use in SendPush.
-func (c *client) NewPushQuery() Query {
+func (c *Client) NewPushQuery() Query {
 	q, _ := c.NewQuery(&Installation{})
 	return q
 }
@@ -58,7 +58,7 @@ func (c *client) NewPushQuery() Query {
 // Create a new Push Notifaction
 //
 // See the Push Notification Guide for more details: https://www.parse.com/docs/push_guide#sending/REST
-func (c *client) NewPushNotification() PushNotification {
+func (c *Client) NewPushNotification() PushNotification {
 	return &pushRequest{client: c}
 }
 

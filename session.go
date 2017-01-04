@@ -24,7 +24,7 @@ type loginRequest struct {
 }
 
 type session struct {
-	client *client
+	client *Client
 
 	user         interface{}
 	sessionToken string
@@ -35,7 +35,7 @@ type session struct {
 // Optionally provide a custom User type to use in place of parse.User. If u is not
 // nil, it will be populated with the user's attributes, and will be accessible
 // by calling session.User().
-func (c *client) Login(username, password string, u interface{}) (Session, error) {
+func (c *Client) Login(username, password string, u interface{}) (Session, error) {
 	var user interface{}
 
 	if u == nil {
@@ -58,7 +58,7 @@ func (c *client) Login(username, password string, u interface{}) (Session, error
 	return s, nil
 }
 
-func (c *client) LoginFacebook(authData *FacebookAuthData, u interface{}) (Session, error) {
+func (c *Client) LoginFacebook(authData *FacebookAuthData, u interface{}) (Session, error) {
 	var user interface{}
 
 	if u == nil {
@@ -86,7 +86,7 @@ func (c *client) LoginFacebook(authData *FacebookAuthData, u interface{}) (Sessi
 // Optionally provide a custom User type to use in place of parse.User. If user is
 // not nil, it will be populated with the user's attributes, and will be accessible
 // by calling session.User().
-func (c *client) Become(st string, u interface{}) (Session, error) {
+func (c *Client) Become(st string, u interface{}) (Session, error) {
 	var user interface{}
 
 	if u == nil {

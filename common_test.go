@@ -16,7 +16,7 @@ type ctxT struct {
 }
 
 var ctx = ctxT{}
-var testClient *client
+var testClient *Client
 
 func setupTestServer(handler http.HandlerFunc) *httptest.Server {
 	ts := httptest.NewTLSServer(handler)

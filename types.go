@@ -764,7 +764,7 @@ func (c *configRequest) contentType() string {
 	return ""
 }
 
-func (c *client) GetConfig() (Config, error) {
+func (c *Client) GetConfig() (Config, error) {
 	b, err := c.doRequest(&configRequest{})
 	if err != nil {
 		return nil, err

@@ -113,7 +113,7 @@ type Update interface {
 }
 
 type updateRequest struct {
-	client *client
+	client *Client
 
 	inst               interface{}
 	values             map[string]updateOp
@@ -125,7 +125,7 @@ type updateRequest struct {
 //
 // Note: v should be a pointer to a struct whose name represents a Parse class,
 // or that implements the ClassName method
-func (c *client) NewUpdate(v interface{}) (Update, error) {
+func (c *Client) NewUpdate(v interface{}) (Update, error) {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return nil, errors.New("v must be a non-nil pointer")
@@ -307,7 +307,7 @@ func (u *updateRequest) contentType() string {
 	return "application/json"
 }
 
-func (c *client) LinkFacebookAccount(u *User, a *FacebookAuthData) error {
+func (c *Client) LinkFacebookAccount(u *User, a *FacebookAuthData) error {
 	if u.Id == "" {
 		return errors.New("user Id field must not be empty")
 	}

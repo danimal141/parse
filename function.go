@@ -9,7 +9,7 @@ import (
 
 type Params map[string]interface{}
 
-func (c *client) CallFunction(name string, params Params, resp interface{}) error {
+func (c *Client) CallFunction(name string, params Params, resp interface{}) error {
 	return c.callFn(name, params, resp, nil)
 }
 
@@ -23,7 +23,7 @@ type fnResponse struct {
 	Result interface{} `parse:"result"`
 }
 
-func (c *client) callFn(name string, params Params, resp interface{}, currentSession *session) error {
+func (c *Client) callFn(name string, params Params, resp interface{}, currentSession *session) error {
 	rv := reflect.ValueOf(resp)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return errors.New("resp must be a non-nil pointer")

@@ -224,7 +224,7 @@ type Query interface {
 }
 
 type queryRequest struct {
-	client *client
+	client *Client
 
 	inst interface{}
 	op   opType
@@ -246,7 +246,7 @@ type queryRequest struct {
 }
 
 // Create a new query instance.
-func (c *client) NewQuery(v interface{}) (Query, error) {
+func (c *Client) NewQuery(v interface{}) (Query, error) {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return nil, errors.New("v must be a non-nil pointer")

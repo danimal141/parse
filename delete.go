@@ -9,11 +9,11 @@ import (
 
 // Delete the instance of the type represented by v from the Parse database. If
 // useMasteKey=true, the Master Key will be used for the deletion request.
-func (c *client) Delete(v interface{}, useMasterKey bool) error {
+func (c *Client) Delete(v interface{}, useMasterKey bool) error {
 	return c._delete(v, useMasterKey, nil)
 }
 
-func (c *client) _delete(v interface{}, useMasterKey bool, currentSession *session) error {
+func (c *Client) _delete(v interface{}, useMasterKey bool, currentSession *session) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return errors.New("v must be a non-nil pointer")

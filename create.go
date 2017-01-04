@@ -22,11 +22,11 @@ type createRequest struct {
 //
 // Note: v should be a pointer to a struct whose name represents a Parse class,
 // or that implements the ClassName method
-func (c *client) Create(v interface{}, useMasterKey bool) error {
+func (c *Client) Create(v interface{}, useMasterKey bool) error {
 	return c.create(v, useMasterKey, nil)
 }
 
-func (c *client) Signup(username string, password string, user interface{}) error {
+func (c *Client) Signup(username string, password string, user interface{}) error {
 	cr := &createRequest{
 		v:                  user,
 		shouldUseMasterKey: false,
@@ -42,7 +42,7 @@ func (c *client) Signup(username string, password string, user interface{}) erro
 	}
 }
 
-func (c *client) create(v interface{}, useMasterKey bool, currentSession *session) error {
+func (c *Client) create(v interface{}, useMasterKey bool, currentSession *session) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return errors.New("v must be a non-nil pointer")
