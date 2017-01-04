@@ -27,7 +27,7 @@ var ErrNoRows = errors.New("no results returned")
 type Query interface {
 
 	// Use the Master Key for the given request.
-	UseMasterKey() Query
+	UseMasterKey()
 
 	// Get retrieves the instance of the type pointed to by v and
 	// identified by id, and stores the result in v.
@@ -38,125 +38,125 @@ type Query interface {
 	// will be sorted in ascending order by default. Prefix field names with a
 	// '-' to sort in descending order. E.g.: q.OrderBy("-createdAt") will sort
 	// by the createdAt field in descending order.
-	OrderBy(fs ...string) Query
+	OrderBy(fs ...string)
 
 	// Set the number of results to retrieve
-	Limit(l int) Query
+	Limit(l int)
 
 	// Set the number of results to skip before returning any results
-	Skip(s int) Query
+	Skip(s int)
 
 	// Specify nested fields to retrieve within the primary object. Use
 	// dot notation to retrieve further nested fields. E.g.:
 	// q.Include("user") or q.Include("user.location")
-	Include(fs ...string) Query
+	Include(fs ...string)
 
 	// Only retrieve the specified fields
-	Keys(fs ...string) Query
+	Keys(fs ...string)
 
 	// Add a constraint requiring the field specified by f be equal to the
 	// value represented by v
-	EqualTo(f string, v interface{}) Query
+	EqualTo(f string, v interface{})
 
 	// Add a constraint requiring the field specified by f not be equal to the
 	// value represented by v
-	NotEqualTo(f string, v interface{}) Query
+	NotEqualTo(f string, v interface{})
 
 	// Add a constraint requiring the field specified by f be greater than the
 	// value represented by v
-	GreaterThan(f string, v interface{}) Query
+	GreaterThan(f string, v interface{})
 
 	// Add a constraint requiring the field specified by f be greater than or
 	// or equal to the value represented by v
-	GreaterThanOrEqual(f string, v interface{}) Query
+	GreaterThanOrEqual(f string, v interface{})
 
 	// Add a constraint requiring the field specified by f be less than the
 	// value represented by v
-	LessThan(f string, v interface{}) Query
+	LessThan(f string, v interface{})
 
 	// Add a constraint requiring the field specified by f be less than or
 	// or equal to the value represented by v
-	LessThanOrEqual(f string, v interface{}) Query
+	LessThanOrEqual(f string, v interface{})
 
 	// Add a constraint requiring the field specified by f be equal to one
 	// of the values specified
-	In(f string, vs ...interface{}) Query
+	In(f string, vs ...interface{})
 
 	// Add a constraint requiring the field specified by f not be equal to any
 	// of the values specified
-	NotIn(f string, vs ...interface{}) Query
+	NotIn(f string, vs ...interface{})
 
 	// Add a constraint requiring returned objects contain the field specified by f
-	Exists(f string) Query
+	Exists(f string)
 
 	// Add a constraint requiring returned objects do not contain the field specified by f
-	DoesNotExist(f string) Query
+	DoesNotExist(f string)
 
 	// Add a constraint requiring the field specified by f contain all
 	// of the values specified
-	All(f string, vs ...interface{}) Query
+	All(f string, vs ...interface{})
 
 	// Add a constraint requiring the string field specified by f contain
 	// the substring specified by v
-	Contains(f string, v string) Query
+	Contains(f string, v string)
 
 	// Add a constraint requiring the string field specified by f start with
 	// the substring specified by v
-	StartsWith(f string, v string) Query
+	StartsWith(f string, v string)
 
 	// Add a constraint requiring the string field specified by f end with
 	// the substring specified by v
-	EndsWith(f string, v string) Query
+	EndsWith(f string, v string)
 
 	// Add a constraint requiring the string field specified by f match the
 	// regular expression v
-	Matches(f string, v string, ignoreCase bool, multiLine bool) Query
+	Matches(f string, v string, ignoreCase bool, multiLine bool)
 
 	// Add a constraint requiring the location of GeoPoint field specified by f be
 	// within the rectangular geographic bounding box with a southwest corner
 	// represented by sw and a northeast corner represented by ne
-	WithinGeoBox(f string, sw GeoPoint, ne GeoPoint) Query
+	WithinGeoBox(f string, sw GeoPoint, ne GeoPoint)
 
 	// Add a constraint requiring the location of GeoPoint field specified by f
 	// be near the point represented by g
-	Near(f string, g GeoPoint) Query
+	Near(f string, g GeoPoint)
 
 	// Add a constraint requiring the location of GeoPoint field specified by f
 	// be near the point represented by g with a maximum distance in miles
 	// represented by m
-	WithinMiles(f string, g GeoPoint, m float64) Query
+	WithinMiles(f string, g GeoPoint, m float64)
 
 	// Add a constraint requiring the location of GeoPoint field specified by f
 	// be near the point represented by g with a maximum distance in kilometers
 	// represented by m
-	WithinKilometers(f string, g GeoPoint, k float64) Query
+	WithinKilometers(f string, g GeoPoint, k float64)
 
 	// Add a constraint requiring the location of GeoPoint field specified by f
 	// be near the point represented by g with a maximum distance in radians
 	// represented by m
-	WithinRadians(f string, g GeoPoint, r float64) Query
+	WithinRadians(f string, g GeoPoint, r float64)
 
 	// Add a constraint requiring the value of the field specified by f be equal
 	// to the field named qk in the result of the subquery sq
-	MatchesKeyInQuery(f string, qk string, sq Query) Query
+	MatchesKeyInQuery(f string, qk string, sq Query)
 
 	// Add a constraint requiring the value of the field specified by f not match
 	// the field named qk in the result of the subquery sq
-	DoesNotMatchKeyInQuery(f string, qk string, sq Query) Query
+	DoesNotMatchKeyInQuery(f string, qk string, sq Query)
 
 	// Add a constraint requiring the field specified by f contain the object
 	// returned by Parse query q
-	MatchesQuery(f string, q Query) Query
+	MatchesQuery(f string, q Query)
 
 	// Add a constraint requiring the field specified by f not contain the object
 	// returned by the Parse query q
-	DoesNotMatchQuery(f string, q Query) Query
+	DoesNotMatchQuery(f string, q Query)
 
 	// Convenience method for duplicating a query
 	Clone() Query
 
 	// Convenience method for building a subquery for use with Query.Or
-	Sub() Query
+	Sub() (Query, error)
 
 	// Constructs a query where each result must satisfy one of the given
 	// subueries
@@ -166,15 +166,18 @@ type Query interface {
 	// cli := parse.NewClient("APP_ID", "REST_KEY", "MASTER_KEY", "HOST", "PATH")
 	// q, _ := cli.NewQuery(&parse.User{})
 	//
-	// sq1 := q.Sub().EqualTo("city", "Chicago")
+	// sq1, _ := q.Sub()
+	// sq1.EqualTo("city", "Chicago")
 	//
-	// sq2 := q.Sub().GreaterThan("age", 30)
+	// sq2, _ := q.Sub()
+	// sq2.GreaterThan("age", 30)
 	//
-	// sq3 := q.Sub().In("occupation", []string{"engineer", "developer"})
+	// sq3, _ := q.Sub()
+	// sq3.In("occupation", []string{"engineer", "developer"})
 	//
 	// q.Or(sq1, sq2, sq3)
 	// q.Each(...)
-	Or(qs ...Query) Query
+	Or(qs ...Query)
 
 	// Fetch all results for a query, sending each result to the provided
 	// channel rc. The element type of rc should match that of the query,
@@ -188,7 +191,7 @@ type Query interface {
 	// and iteration will discontinue. This argument may be nil.
 	Each(rc interface{}) (*Iterator, error)
 
-	SetBatchSize(size uint) Query
+	SetBatchSize(size uint)
 
 	// Retrieves a list of objects that satisfy the given query. The results
 	// are assigned to the slice provided to NewQuery.
@@ -263,9 +266,8 @@ func (c *Client) NewQuery(v interface{}) (Query, error) {
 	}, nil
 }
 
-func (q *queryRequest) UseMasterKey() Query {
+func (q *queryRequest) UseMasterKey() {
 	q.shouldUseMasterKey = true
-	return q
 }
 
 func (q *queryRequest) Get(id string) error {
@@ -278,57 +280,49 @@ func (q *queryRequest) Get(id string) error {
 	}
 }
 
-func (q *queryRequest) OrderBy(fs ...string) Query {
+func (q *queryRequest) OrderBy(fs ...string) {
 	q.orderBy = append(make([]string, 0, len(fs)), fs...)
-	return q
 }
 
-func (q *queryRequest) Limit(l int) Query {
+func (q *queryRequest) Limit(l int) {
 	q.limit = &l
-	return q
 }
 
-func (q *queryRequest) Skip(s int) Query {
+func (q *queryRequest) Skip(s int) {
 	q.skip = &s
-	return q
 }
 
-func (q *queryRequest) Include(fs ...string) Query {
+func (q *queryRequest) Include(fs ...string) {
 	for _, f := range fs {
 		q.include[f] = struct{}{}
 	}
-	return q
 }
 
-func (q *queryRequest) Keys(fs ...string) Query {
+func (q *queryRequest) Keys(fs ...string) {
 	for _, f := range fs {
 		q.keys[f] = struct{}{}
 	}
-	return q
 }
 
-func (q *queryRequest) EqualTo(f string, v interface{}) Query {
+func (q *queryRequest) EqualTo(f string, v interface{}) {
 	qv := encodeForRequest(v)
 	q.where[f] = qv
-	return q
 }
 
-func (q *queryRequest) NotEqualTo(f string, v interface{}) Query {
+func (q *queryRequest) NotEqualTo(f string, v interface{}) {
 	qv := encodeForRequest(v)
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$ne"] = qv
-			return q
 		}
 	}
 
 	q.where[f] = map[string]interface{}{
 		"$ne": qv,
 	}
-	return q
 }
 
-func (q *queryRequest) GreaterThan(f string, v interface{}) Query {
+func (q *queryRequest) GreaterThan(f string, v interface{}) {
 	var qv interface{}
 	if t, ok := v.(time.Time); ok {
 		qv = Date(t)
@@ -341,17 +335,15 @@ func (q *queryRequest) GreaterThan(f string, v interface{}) Query {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$gt"] = qv
-			return q
 		}
 	}
 
 	q.where[f] = map[string]interface{}{
 		"$gt": qv,
 	}
-	return q
 }
 
-func (q *queryRequest) GreaterThanOrEqual(f string, v interface{}) Query {
+func (q *queryRequest) GreaterThanOrEqual(f string, v interface{}) {
 	var qv interface{}
 	if t, ok := v.(time.Time); ok {
 		qv = Date(t)
@@ -364,17 +356,15 @@ func (q *queryRequest) GreaterThanOrEqual(f string, v interface{}) Query {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$gte"] = qv
-			return q
 		}
 	}
 
 	q.where[f] = map[string]interface{}{
 		"$gte": qv,
 	}
-	return q
 }
 
-func (q *queryRequest) LessThan(f string, v interface{}) Query {
+func (q *queryRequest) LessThan(f string, v interface{}) {
 	var qv interface{}
 	if t, ok := v.(time.Time); ok {
 		qv = Date(t)
@@ -387,17 +377,15 @@ func (q *queryRequest) LessThan(f string, v interface{}) Query {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$lt"] = qv
-			return q
 		}
 	}
 
 	q.where[f] = map[string]interface{}{
 		"$lt": qv,
 	}
-	return q
 }
 
-func (q *queryRequest) LessThanOrEqual(f string, v interface{}) Query {
+func (q *queryRequest) LessThanOrEqual(f string, v interface{}) {
 	var qv interface{}
 	if t, ok := v.(time.Time); ok {
 		qv = Date(t)
@@ -410,137 +398,118 @@ func (q *queryRequest) LessThanOrEqual(f string, v interface{}) Query {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$lte"] = qv
-			return q
 		}
 	}
 
 	q.where[f] = map[string]interface{}{
 		"$lte": qv,
 	}
-	return q
 }
 
-func (q *queryRequest) In(f string, vs ...interface{}) Query {
+func (q *queryRequest) In(f string, vs ...interface{}) {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$in"] = vs
-			return q
 		}
 	}
 
 	q.where[f] = map[string]interface{}{
 		"$in": vs,
 	}
-	return q
 }
 
-func (q *queryRequest) NotIn(f string, vs ...interface{}) Query {
+func (q *queryRequest) NotIn(f string, vs ...interface{}) {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$nin"] = vs
-			return q
 		}
 	}
 
 	q.where[f] = map[string]interface{}{
 		"$nin": vs,
 	}
-	return q
 }
 
-func (q *queryRequest) Exists(f string) Query {
+func (q *queryRequest) Exists(f string) {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$exists"] = true
-			return q
 		}
 	}
 
 	q.where[f] = map[string]interface{}{
 		"$exists": true,
 	}
-	return q
 }
 
-func (q *queryRequest) DoesNotExist(f string) Query {
+func (q *queryRequest) DoesNotExist(f string) {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$exists"] = false
-			return q
 		}
 	}
 
 	q.where[f] = map[string]interface{}{
 		"$exists": false,
 	}
-	return q
 }
 
-func (q *queryRequest) All(f string, vs ...interface{}) Query {
+func (q *queryRequest) All(f string, vs ...interface{}) {
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$all"] = vs
-			return q
 		}
 	}
 
 	q.where[f] = map[string]interface{}{
 		"$all": vs,
 	}
-	return q
 }
 
-func (q *queryRequest) Contains(f string, v string) Query {
+func (q *queryRequest) Contains(f string, v string) {
 	v = quote(v)
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$regex"] = v
-			return q
 		}
 	}
 
 	q.where[f] = map[string]interface{}{
 		"$regex": v,
 	}
-	return q
 }
 
-func (q *queryRequest) StartsWith(f string, v string) Query {
+func (q *queryRequest) StartsWith(f string, v string) {
 	v = "^" + quote(v)
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$regex"] = v
-			return q
 		}
 	}
 
 	q.where[f] = map[string]interface{}{
 		"$regex": v,
 	}
-	return q
 }
 
-func (q *queryRequest) EndsWith(f string, v string) Query {
+func (q *queryRequest) EndsWith(f string, v string) {
 	v = quote(v) + "$"
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$regex"] = v
-			return q
 		}
 	}
 
 	q.where[f] = map[string]interface{}{
 		"$regex": v,
 	}
-	return q
 }
 
-func (q *queryRequest) Matches(f string, v string, ignoreCase bool, multiLine bool) Query {
+func (q *queryRequest) Matches(f string, v string, ignoreCase bool, multiLine bool) {
 	v = quote(v)
 	if cv, ok := q.where[f]; ok {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$regex"] = v
-			return q
 		}
 	}
 
@@ -563,51 +532,44 @@ func (q *queryRequest) Matches(f string, v string, ignoreCase bool, multiLine bo
 			m["$options"] = options
 		}
 	}
-
-	return q
 }
 
-func (q *queryRequest) WithinGeoBox(f string, sw GeoPoint, ne GeoPoint) Query {
+func (q *queryRequest) WithinGeoBox(f string, sw GeoPoint, ne GeoPoint) {
 	q.where[f] = map[string]interface{}{
 		"$within": map[string]interface{}{
 			"$box": []GeoPoint{sw, ne},
 		},
 	}
-	return q
 }
 
-func (q *queryRequest) Near(f string, g GeoPoint) Query {
+func (q *queryRequest) Near(f string, g GeoPoint) {
 	q.where[f] = map[string]interface{}{
 		"$nearSphere": g,
 	}
-	return q
 }
 
-func (q *queryRequest) WithinMiles(f string, g GeoPoint, m float64) Query {
+func (q *queryRequest) WithinMiles(f string, g GeoPoint, m float64) {
 	q.where[f] = map[string]interface{}{
 		"$nearSphere":         g,
 		"$maxDistanceInMiles": m,
 	}
-	return q
 }
 
-func (q *queryRequest) WithinKilometers(f string, g GeoPoint, k float64) Query {
+func (q *queryRequest) WithinKilometers(f string, g GeoPoint, k float64) {
 	q.where[f] = map[string]interface{}{
 		"$nearSphere":              g,
 		"$maxDistanceInKilometers": k,
 	}
-	return q
 }
 
-func (q *queryRequest) WithinRadians(f string, g GeoPoint, r float64) Query {
+func (q *queryRequest) WithinRadians(f string, g GeoPoint, r float64) {
 	q.where[f] = map[string]interface{}{
 		"$nearSphere":           g,
 		"$maxDistanceInRadians": r,
 	}
-	return q
 }
 
-func (q *queryRequest) MatchesKeyInQuery(f, qk string, sq Query) Query {
+func (q *queryRequest) MatchesKeyInQuery(f, qk string, sq Query) {
 	var sqt *queryRequest
 	if tmp, ok := sq.(*queryRequest); ok {
 		sqt = tmp
@@ -619,10 +581,9 @@ func (q *queryRequest) MatchesKeyInQuery(f, qk string, sq Query) Query {
 			"query": sqt,
 		},
 	}
-	return q
 }
 
-func (q *queryRequest) DoesNotMatchKeyInQuery(f string, qk string, sq Query) Query {
+func (q *queryRequest) DoesNotMatchKeyInQuery(f string, qk string, sq Query) {
 	var sqt *queryRequest
 	if tmp, ok := sq.(*queryRequest); ok {
 		sqt = tmp
@@ -634,21 +595,18 @@ func (q *queryRequest) DoesNotMatchKeyInQuery(f string, qk string, sq Query) Que
 			"query": sqt,
 		},
 	}
-	return q
 }
 
-func (q *queryRequest) MatchesQuery(f string, sq Query) Query {
+func (q *queryRequest) MatchesQuery(f string, sq Query) {
 	q.where[f] = map[string]interface{}{
 		"$inQuery": sq,
 	}
-	return q
 }
 
-func (q *queryRequest) DoesNotMatchQuery(f string, sq Query) Query {
+func (q *queryRequest) DoesNotMatchQuery(f string, sq Query) {
 	q.where[f] = map[string]interface{}{
 		"$notInQuery": sq,
 	}
-	return q
 }
 
 func (q *queryRequest) Clone() Query {
@@ -700,12 +658,11 @@ func (q *queryRequest) Clone() Query {
 	return &nq
 }
 
-func (q *queryRequest) Sub() Query {
-	q2, _ := q.client.NewQuery(q.inst)
-	return q2
+func (q *queryRequest) Sub() (Query, error) {
+	return q.client.NewQuery(q.inst)
 }
 
-func (q *queryRequest) Or(qs ...Query) Query {
+func (q *queryRequest) Or(qs ...Query) {
 	or := make([]map[string]interface{}, 0, len(qs))
 	for _, qi := range qs {
 		if qt, ok := qi.(*queryRequest); ok {
@@ -713,7 +670,6 @@ func (q *queryRequest) Or(qs ...Query) Query {
 		}
 	}
 	q.where["$or"] = or
-	return q
 }
 
 var chanInterfaceType = reflect.TypeOf(make(chan interface{}, 0))
@@ -832,13 +788,12 @@ func (q *queryRequest) Each(rc interface{}) (*Iterator, error) {
 	return i, nil
 }
 
-func (q *queryRequest) SetBatchSize(size uint) Query {
+func (q *queryRequest) SetBatchSize(size uint) {
 	if size <= 1000 {
 		q.batchSize = int(size)
 	} else {
 		q.batchSize = 100
 	}
-	return q
 }
 
 func (q *queryRequest) Find() error {

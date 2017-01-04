@@ -33,8 +33,9 @@ func main() {
 		log.Fatal(err)
 	}
 	q.EqualTo("email", "kylemcc@gmail.com")
-	q.GreaterThan("numFollowers", 10).OrderBy("-createdAt") // API is chainable
-	err := q.First()
+	q.GreaterThan("numFollowers", 10)
+	q.OrderBy("-createdAt")
+	err = q.First()
 	if err != nil {
 		if pe, ok := err.(parse.APIError); ok {
 			fmt.Printf("Error querying parse: %d - %s\n", pe.Code(), pe.Message())

@@ -444,7 +444,9 @@ func TestQueryUseMasterKey(t *testing.T) {
 		t.FailNow()
 	}
 
-	q.EqualTo("city", "Chicago").GreaterThan("age", 30).UseMasterKey()
+	q.EqualTo("city", "Chicago")
+	q.GreaterThan("age", 30)
+	q.UseMasterKey()
 	err = q.First()
 	if err != nil {
 		t.Errorf("Error running query: %v\n", err)
@@ -468,7 +470,9 @@ func TestFirst(t *testing.T) {
 		t.FailNow()
 	}
 
-	q.EqualTo("city", "Chicago").GreaterThan("age", 30).UseMasterKey()
+	q.EqualTo("city", "Chicago")
+	q.GreaterThan("age", 30)
+	q.UseMasterKey()
 	err = q.First()
 	if err != nil {
 		t.Errorf("Error running query: %v\n", err)
