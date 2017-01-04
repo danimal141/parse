@@ -611,12 +611,13 @@ func (q *query) DoesNotMatchQuery(f string, sq Query) {
 
 func (q *query) Clone() Query {
 	nq := query{
+		client:             q.client,
 		inst:               q.inst,
 		op:                 q.op,
 		instId:             q.instId,
 		currentSession:     q.currentSession,
-		shouldUseMasterKey: q.shouldUseMasterKey,
 		className:          q.className,
+		shouldUseMasterKey: q.shouldUseMasterKey,
 	}
 
 	if q.limit != nil {
