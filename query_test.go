@@ -47,7 +47,7 @@ func TestEndpoint(t *testing.T) {
 			t.Errorf("Unexpected error creating query: %v\n", err)
 			t.FailNow()
 		}
-		qt := q.(*queryRequest)
+		qt := q.(*query)
 		actual, err := qt.endpoint()
 		if err != nil {
 			t.Errorf("Unexpected error creating query: %v\n", err)
@@ -80,7 +80,7 @@ func TestEndpointGet(t *testing.T) {
 			t.FailNow()
 		}
 		for _, ot := range ops {
-			qt := q.(*queryRequest)
+			qt := q.(*query)
 			qt.op = ot
 			qt.instId = &tc.id
 			actual, err := qt.endpoint()
@@ -111,7 +111,7 @@ func TestFilters(t *testing.T) {
 		t.FailNow()
 	}
 
-	qt := q.(*queryRequest)
+	qt := q.(*query)
 
 	q.EqualTo("f1", "test")
 	q.EqualTo("f2", 1)
@@ -312,7 +312,7 @@ func TestFilters(t *testing.T) {
 		t.Errorf("where different from expected. expected:\n%s\n\ngot:\n%s\n", eb, b)
 	}
 
-	p, _ := q.(*queryRequest).payload()
+	p, _ := q.(*query).payload()
 	qs, err := url.ParseQuery(p)
 	if err != nil {
 		t.Errorf("unexpected error parsing query string: %v\n", err)

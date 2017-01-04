@@ -120,7 +120,7 @@ func (s *session) User() interface{} {
 func (s *session) NewQuery(v interface{}) (Query, error) {
 	q, err := s.client.NewQuery(v)
 	if err == nil {
-		if qt, ok := q.(*queryRequest); ok {
+		if qt, ok := q.(*query); ok {
 			qt.currentSession = s
 		}
 	}

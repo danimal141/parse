@@ -63,7 +63,7 @@ func (c *Client) NewPushNotification() PushNotification {
 }
 
 func (p *pushRequest) Where(q Query) PushNotification {
-	p.where = q.(*queryRequest).where
+	p.where = q.(*query).where
 	return p
 }
 
