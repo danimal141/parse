@@ -80,8 +80,6 @@ func (c *Client) SetUserAgent(ua string) error {
 // Set the maximum number of requests per second, with an optional
 // burst rate.
 //
-// Returns an error if called before parse.Initialize
-//
 // If this option is set, this library will restrict calling code to
 // a maximum number of requests per second. Requests exceeding this limit
 // will block for the appropriate period of time.
