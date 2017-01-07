@@ -70,7 +70,7 @@ func main() {
 
 ###TODO
 - Missing query operations
-	- Related to
+	- ~~Related to~~
 - Missing CRUD operations:
     - Update
 		- Field ops (__op):

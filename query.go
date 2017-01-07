@@ -145,11 +145,9 @@ type Query interface {
 	DoesNotMatchKeyInQuery(f string, qk string, sq Query)
 
 	// Add a constraint requiring the field specified by f contain the object
-	// returned by Parse query q
 	MatchesQuery(f string, q Query)
 
 	// Add a constraint requiring the field specified by f not contain the object
-	// returned by the Parse query q
 	DoesNotMatchQuery(f string, q Query)
 
 	// Convenience method for duplicating a query
@@ -192,6 +190,23 @@ type Query interface {
 	Each(rc interface{}) (*Iterator, error)
 
 	SetBatchSize(size uint)
+
+	// Retrieve objects that are members of Relation field of a parent object.
+	// E.g.:
+	//
+	// cli := parse.NewClient("APP_ID", "REST_KEY", "MASTER_KEY", "HOST", "PATH")
+	// role := new(parse.Role)
+	// q1, _ := cli.NewQuery(role)
+	// q1.UseMasterKey()
+	// q1.EqualTo("name", "Admin")
+	// err := q1.First() // Retrieve the admin role
+	//
+	// users := make([]parse.User)
+	// q2, _ := cli.NewQuery(&users)
+	// q2.UseMasterKey()
+	// q2.RelatedTo("users", role)
+	// err = q2.Find() // Retrieve the admin users
+	RelatedTo(f string, v interface{})
 
 	// Retrieves a list of objects that satisfy the given query. The results
 	// are assigned to the slice provided to NewQuery.
@@ -795,6 +810,10 @@ func (q *query) SetBatchSize(size uint) {
 	} else {
 		q.batchSize = 100
 	}
+}
+
+func (q *query) RelatedTo(f string, v interface{}) {
+	q.where["$relatedTo"] = map[string]interface{}{"object": encodeForRequest(v), "key": f}
 }
 
 func (q *query) Find() error {
