@@ -162,8 +162,7 @@ func (u *User) Endpoint() string {
 }
 
 // Represents the built-in Parse "Installation" class. Embed this type in a custom
-// type containing any custom fields. When fetching user objects, any retrieved
-// fields with no matching struct field will be stored in User.Extra (map[string]interface{})
+// type containing any custom fields.
 type Installation struct {
 	Base
 	Badge          int      `parse:",omitempty"`
@@ -187,6 +186,21 @@ func (i *Installation) ClassName() string {
 
 func (i *Installation) Endpoint() string {
 	return "installations"
+}
+
+// Represents the built-in Parse "Role" class. Embed this type in a custom
+// type containing any custom fields.
+type Role struct {
+	Base
+	Name string
+}
+
+func (r *Role) ClassName() string {
+	return "_Role"
+}
+
+func (r *Role) Endpoint() string {
+	return "roles"
 }
 
 type ACL interface {
