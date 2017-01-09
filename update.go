@@ -128,7 +128,7 @@ type updateRequest struct {
 func (c *Client) NewUpdate(v interface{}) (Update, error) {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return nil, errors.New("v must be a non-nil pointer")
+		return nil, fmt.Errorf("parse: expected a non-nil pointer got %v", rv.Kind())
 	}
 
 	return &updateRequest{
@@ -172,7 +172,7 @@ func (u *updateRequest) Execute() (err error) {
 			if e, ok := r.(error); ok {
 				err = e
 			} else {
-				err = fmt.Errorf("error executing update: %v", r)
+				err = fmt.Errorf("parse: error executing update: %v", r)
 			}
 		}
 	}()
@@ -269,10 +269,10 @@ func (u *updateRequest) endpoint() (string, error) {
 		if s, ok := f.Interface().(string); ok {
 			p = path.Join(p, s)
 		} else {
-			return "", fmt.Errorf("Id field should be a string, received type %s", f.Type())
+			return "", fmt.Errorf("parse: Id field should be a string, got type %s", f.Type())
 		}
 	} else {
-		return "", fmt.Errorf("can not update value - type has no Id field")
+		return "", fmt.Errorf("parse: can not update value - type has no Id field")
 	}
 
 	return p, nil
@@ -301,7 +301,7 @@ func (u *updateRequest) contentType() string {
 
 func (c *Client) LinkFacebookAccount(u *User, a *FacebookAuthData) error {
 	if u.Id == "" {
-		return errors.New("user Id field must not be empty")
+		return errors.New("parse: user Id field must not be empty")
 	}
 
 	up, _ := c.NewUpdate(u)

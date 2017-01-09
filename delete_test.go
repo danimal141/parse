@@ -3,12 +3,14 @@ package parse
 import (
 	"fmt"
 	"net/http"
+	"reflect"
 	"testing"
 )
 
 func TestDeleteRequiresPointer(t *testing.T) {
 	u := User{}
-	expected := "v must be a non-nil pointer"
+	rv := reflect.TypeOf(u)
+	expected := fmt.Sprintf("parse: expected a non-nil pointer got %v", rv.Kind())
 	if err := testClient.Delete(u, true); err == nil {
 		t.Error("Delete should return an error when argument is not a pointer")
 	} else if err.Error() != expected {

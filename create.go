@@ -2,7 +2,7 @@ package parse
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"reflect"
 )
 
@@ -45,7 +45,7 @@ func (c *Client) Signup(username string, password string, user interface{}) erro
 func (c *Client) create(v interface{}, useMasterKey bool, currentSession *session) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return errors.New("v must be a non-nil pointer")
+		return fmt.Errorf("parse: expected a non-nil pointer got %v", rv.Kind())
 	}
 
 	cr := &createRequest{

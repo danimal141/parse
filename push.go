@@ -114,7 +114,7 @@ func (p *pushRequest) endpoint() (string, error) {
 
 func (p *pushRequest) body() (string, error) {
 	if p.expirationTime != nil && p.expirationInterval > 0 {
-		return "", errors.New("cannot use both expiration_time and expiration_interval")
+		return "", errors.New("parse: cannot use both expiration_time and expiration_interval")
 	}
 
 	payload, err := json.Marshal(&struct {

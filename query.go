@@ -22,7 +22,7 @@ const (
 )
 
 // Returned when a query returns no results
-var ErrNoRows = errors.New("no results returned")
+var ErrNoRows = errors.New("parse: no results returned")
 
 type Query interface {
 
@@ -192,6 +192,7 @@ type Query interface {
 	SetBatchSize(size uint)
 
 	// Retrieve objects that are members of Relation field of a parent object.
+	//
 	// E.g.:
 	//
 	// cli := parse.NewClient("APP_ID", "REST_KEY", "MASTER_KEY", "HOST", "PATH")
@@ -267,7 +268,7 @@ type query struct {
 func (c *Client) NewQuery(v interface{}) (Query, error) {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return nil, errors.New("v must be a non-nil pointer")
+		return nil, fmt.Errorf("parse: expected a non-nil pointer got %v", rv.Kind())
 	}
 
 	return &query{
@@ -695,16 +696,16 @@ func (q *query) Each(rc interface{}) (*Iterator, error) {
 	rv := reflect.ValueOf(rc)
 	rt := rv.Type()
 	if rt.Kind() != reflect.Chan {
-		return nil, fmt.Errorf("rc must be a channel, received %s", rt.Kind())
+		return nil, fmt.Errorf("parse: expected a channel, got %s", rt.Kind())
 	}
 
 	if rt.Elem().Kind() == reflect.Ptr {
 		if rt.Elem() != instType && rt != chanInterfaceType {
-			return nil, fmt.Errorf("1rc must be of type chan %s, received chan %s", instType, rt.Elem())
+			return nil, fmt.Errorf("parse: expected %s, got %s", instType, rt.Elem())
 		}
 	} else {
 		if rt.Elem() != instType.Elem() && rt != chanInterfaceType {
-			return nil, fmt.Errorf("2rc must be of type chan %s, received chan %s", instType.Elem(), rt.Elem())
+			return nil, fmt.Errorf("parse: expected %s, got %s", instType.Elem(), rt.Elem())
 		}
 	}
 
@@ -713,7 +714,7 @@ func (q *query) Each(rc interface{}) (*Iterator, error) {
 	}
 
 	if q.limit != nil || q.skip != nil || len(q.orderBy) > 0 {
-		return nil, errors.New("cannot iterate over a query with a sort, limit, or skip")
+		return nil, errors.New("parse: cannot iterate over a query with a sort, limit, or skip")
 	}
 
 	q.OrderBy("objectId")
@@ -854,7 +855,7 @@ func (q *query) First() error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("expected struct or slice, got %s", rvi.Kind())
+		return fmt.Errorf("parse: expected struct or slice, got %s", rvi.Kind())
 	}
 	return nil
 }

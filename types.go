@@ -543,7 +543,7 @@ func (d *Date) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	if s.Type != "Date" {
-		return fmt.Errorf("cannot unmarshal type %s to type Date", s.Type)
+		return fmt.Errorf("parse: cannot unmarshal type %s to type Date", s.Type)
 	}
 
 	t, err := time.Parse("2006-01-02T15:04:05.000Z", s.Iso)
@@ -818,7 +818,7 @@ func RegisterType(t interface{}) error {
 	rvi := reflect.Indirect(rv)
 
 	if rvi.Kind() != reflect.Struct {
-		return fmt.Errorf("expected struct or pointer to struct, got: %v", rv.Kind())
+		return fmt.Errorf("parse: expected struct or pointer to struct, got: %v", rv.Kind())
 	}
 
 	className := getClassName(t)

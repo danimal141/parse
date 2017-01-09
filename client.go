@@ -3,7 +3,6 @@ package parse
 import (
 	"compress/gzip"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -48,7 +47,7 @@ type Client struct {
 	limiter    limiter
 }
 
-// Initialize the parse library with your API keys
+// Create the parse client with your API keys
 func NewClient(appId, restKey, masterKey, host, path string) *Client {
 	return &Client{
 		appId:      appId,
@@ -62,19 +61,13 @@ func NewClient(appId, restKey, masterKey, host, path string) *Client {
 }
 
 // Set the timeout for requests to Parse
-//
-// Returns an error if called before parse.Initialize
-func (c *Client) SetHTTPTimeout(t time.Duration) error {
+func (c *Client) SetHTTPTimeout(t time.Duration) {
 	c.httpClient.Timeout = t
-	return nil
 }
 
 // Set the User Agent to be specified for requests against Parse
-//
-// Returns an error if called before parse.Initialize
-func (c *Client) SetUserAgent(ua string) error {
+func (c *Client) SetUserAgent(ua string) {
 	c.userAgent = ua
-	return nil
 }
 
 // Set the maximum number of requests per second, with an optional
@@ -83,14 +76,12 @@ func (c *Client) SetUserAgent(ua string) error {
 // If this option is set, this library will restrict calling code to
 // a maximum number of requests per second. Requests exceeding this limit
 // will block for the appropriate period of time.
-func (c *Client) SetRateLimit(limit, burst uint) error {
+func (c *Client) SetRateLimit(limit, burst uint) {
 	c.limiter = newRateLimiter(limit, burst)
-	return nil
 }
 
-func (c *Client) SetHTTPClient(hc *http.Client) error {
+func (c *Client) SetHTTPClient(hc *http.Client) {
 	c.httpClient = hc
-	return nil
 }
 
 func (c *Client) doRequest(op request) ([]byte, error) {
@@ -180,7 +171,7 @@ func (c *Client) doRequest(op request) ([]byte, error) {
 func handleResponse(body []byte, dst interface{}) error {
 	rv := reflect.ValueOf(dst)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return errors.New("v must be a non-nil pointer")
+		return fmt.Errorf("parse: expected a non-nil pointer got %v", rv.Kind())
 	}
 
 	data := make(map[string]interface{})
@@ -266,7 +257,7 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 			if e, ok := r.(error); ok {
 				err = e
 			} else {
-				err = fmt.Errorf("error populating struct: %v", r)
+				err = fmt.Errorf("parse: error populating struct: %v", r)
 			}
 		}
 	}()
@@ -307,7 +298,7 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 				dv.Elem().Set(dvi)
 			}
 		} else {
-			return fmt.Errorf("expected slice, got %s", sv.Kind())
+			return fmt.Errorf("parse: expected slice, got %s", sv.Kind())
 		}
 	case reflect.Struct: // TODO: Handle other Parse object types ?
 		if dvi.Type() == reflect.TypeOf(time.Time{}) || dvi.Type() == reflect.TypeOf(Date{}) {
@@ -327,18 +318,18 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 								dvi.Set(reflect.ValueOf(t).Convert(dvi.Type()))
 							}
 						} else {
-							return fmt.Errorf("malformed Date type: %v", m)
+							return fmt.Errorf("parse: malformed Date type: %v", m)
 						}
 					} else {
-						return fmt.Errorf("expected Date type got %s", t)
+						return fmt.Errorf("parse: expected Date type got %s", t)
 					}
 				} else {
-					return fmt.Errorf("no __type in object: %v", m)
+					return fmt.Errorf("parse: no __type in object: %v", m)
 				}
 			} else if svi.Type().ConvertibleTo(dvi.Type()) {
 				dvi.Set(sv.Convert(dvi.Type()))
 			} else {
-				return fmt.Errorf("expected string or Date type, got %s", sv.Type())
+				return fmt.Errorf("parse: expected string or Date type, got %s", sv.Type())
 			}
 		} else if svi.Kind() == reflect.Map {
 			fieldNameMap := getFieldNameMap(dvi)
@@ -375,7 +366,7 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 								err = populateValue(fptr.Interface(), v)
 							}
 							if err != nil {
-								return fmt.Errorf("can not set field %s - %s", k, err)
+								return fmt.Errorf("parse: can not set field %s - %s", k, err)
 							}
 						}
 					} else if f := dvi.FieldByName("Extra"); f.IsValid() && f.Kind() == reflect.Map {
@@ -383,7 +374,7 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 					}
 				}
 			} else {
-				return fmt.Errorf("expected map[string]interface{} got %s", sv.Type())
+				return fmt.Errorf("parse: expected map[string]interface{} got %s", sv.Type())
 			}
 		} else if svi.Type().AssignableTo(dvi.Type()) {
 			dvi.Set(svi)
@@ -395,7 +386,7 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 			}
 			return populateValue(dst, newv.Interface())
 		} else {
-			return fmt.Errorf("expected map, got %s", svi.Kind())
+			return fmt.Errorf("parse: expected map, got %s", svi.Kind())
 		}
 	case reflect.Interface:
 		if _, ok := dst.(*ACL); ok {
@@ -426,7 +417,7 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 			} else if _, ok := src.(ACL); ok {
 				dvi.Set(sv)
 			} else {
-				return fmt.Errorf("can not set field ACL - expected type map[string]interface{} - got: %v", reflect.TypeOf(src))
+				return fmt.Errorf("parse: can not set field ACL - expected type map[string]interface{} - got: %v", reflect.TypeOf(src))
 			}
 		} else if m, ok := src.(map[string]interface{}); ok {
 			if c, ok := m["className"]; ok {

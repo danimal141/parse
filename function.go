@@ -2,7 +2,7 @@ package parse
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"path"
 	"reflect"
 )
@@ -26,7 +26,7 @@ type fnResponse struct {
 func (c *Client) callFn(name string, params Params, resp interface{}, currentSession *session) error {
 	rv := reflect.ValueOf(resp)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return errors.New("resp must be a non-nil pointer")
+		return fmt.Errorf("parse: expected a non-nil pointer got %v", rv.Kind())
 	}
 
 	if params == nil {

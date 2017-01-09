@@ -1,7 +1,6 @@
 package parse
 
 import (
-	"errors"
 	"fmt"
 	"path"
 	"reflect"
@@ -16,7 +15,7 @@ func (c *Client) Delete(v interface{}, useMasterKey bool) error {
 func (c *Client) _delete(v interface{}, useMasterKey bool, currentSession *session) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return errors.New("v must be a non-nil pointer")
+		return fmt.Errorf("parse: expected a non-nil pointer got %v", rv.Kind())
 	}
 
 	_, err := c.doRequest(&deleteRequest{
@@ -45,10 +44,10 @@ func (d *deleteRequest) endpoint() (string, error) {
 		if s, ok := f.Interface().(string); ok {
 			id = s
 		} else {
-			return "", fmt.Errorf("Id field should be a string, received type %s", f.Type())
+			return "", fmt.Errorf("parse: Id field should be a string, received type %s", f.Type())
 		}
 	} else {
-		return "", fmt.Errorf("can not delete value - type has no Id field")
+		return "", fmt.Errorf("parse: can not delete value - type has no Id field")
 	}
 
 	return path.Join(getEndpointBase(d.inst), id), nil

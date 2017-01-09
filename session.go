@@ -3,6 +3,7 @@ package parse
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"reflect"
 )
@@ -203,9 +204,9 @@ func (l *loginRequest) contentType() string {
 func validateUser(u interface{}) error {
 	rv := reflect.ValueOf(u)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return errors.New("u must be a non-nil pointer")
+		return fmt.Errorf("parse: expected a non-nil pointer got %v", rv.Kind())
 	} else if getClassName(u) != "_User" {
-		return errors.New("u must embed parse.User or implement a ClassName function that returns \"_User\"")
+		return errors.New("parse: expected parse.User or implement a ClassName function that returns \"_User\"")
 	}
 	return nil
 }
@@ -218,7 +219,7 @@ func handleLoginResponse(body []byte, dst interface{}) (sessionToken string, err
 
 	st, ok := data["sessionToken"]
 	if !ok {
-		return "", errors.New("response did not contain sessionToken")
+		return "", errors.New("parse: response did not contain sessionToken")
 	}
 	return st.(string), populateValue(dst, data)
 }

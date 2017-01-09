@@ -339,7 +339,8 @@ func TestFilters(t *testing.T) {
 
 func TestQueryRequiresPointer(t *testing.T) {
 	u := User{}
-	expected := "v must be a non-nil pointer"
+	rv := reflect.TypeOf(u)
+	expected := fmt.Sprintf("parse: expected a non-nil pointer got %v", rv.Kind())
 	if _, err := testClient.NewQuery(u); err == nil {
 		t.Error("testClient.NewQuery should return an error when argument is not a pointer")
 	} else if err.Error() != expected {
