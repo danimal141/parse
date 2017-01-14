@@ -38,7 +38,6 @@ type session struct {
 // by calling session.User().
 func (c *Client) Login(username, password string, u interface{}) (Session, error) {
 	var user interface{}
-
 	if u == nil {
 		user = &User{}
 	} else if err := validateUser(u); err != nil {
@@ -55,7 +54,6 @@ func (c *Client) Login(username, password string, u interface{}) (Session, error
 	} else {
 		s.sessionToken = st
 	}
-
 	return s, nil
 }
 
@@ -89,7 +87,6 @@ func (c *Client) LoginFacebook(authData *FacebookAuthData, u interface{}) (Sessi
 // by calling session.User().
 func (c *Client) Become(st string, u interface{}) (Session, error) {
 	var user interface{}
-
 	if u == nil {
 		user = &User{}
 	} else if err := validateUser(u); err != nil {
@@ -122,7 +119,7 @@ func (s *session) NewQuery(v interface{}) (Query, error) {
 	q, err := s.client.NewQuery(v)
 	if err == nil {
 		if qt, ok := q.(*query); ok {
-			qt.currentSession = s
+			qt.st = s.sessionToken
 		}
 	}
 	return q, err
@@ -132,22 +129,22 @@ func (s *session) NewUpdate(v interface{}) (Update, error) {
 	u, err := s.client.NewUpdate(v)
 	if err == nil {
 		if ut, ok := u.(*updateRequest); ok {
-			ut.currentSession = s
+			ut.st = s.sessionToken
 		}
 	}
 	return u, err
 }
 
 func (s *session) Create(v interface{}) error {
-	return s.client.create(v, false, s)
+	return s.client.create(v, false, s.sessionToken)
 }
 
 func (s *session) Delete(v interface{}) error {
-	return s.client._delete(v, false, s)
+	return s.client._delete(v, false, s.sessionToken)
 }
 
 func (s *session) CallFunction(name string, params Params, resp interface{}) error {
-	return s.client.callFn(name, params, resp, s)
+	return s.client.callFn(name, params, resp, s.sessionToken)
 }
 
 func (l *loginRequest) method() string {
@@ -177,7 +174,6 @@ func (l *loginRequest) endpoint() (string, error) {
 		v["password"] = []string{l.password}
 		u.RawQuery = v.Encode()
 	}
-
 	return u.String(), nil
 }
 
@@ -193,8 +189,11 @@ func (l *loginRequest) useMasterKey() bool {
 	return false
 }
 
-func (l *loginRequest) session() *session {
-	return l.s
+func (l *loginRequest) sessionToken() string {
+	if l.s != nil {
+		return l.s.sessionToken
+	}
+	return ""
 }
 
 func (l *loginRequest) contentType() string {

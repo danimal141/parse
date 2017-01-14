@@ -30,7 +30,7 @@ type request interface {
 	endpoint() (string, error)
 	body() (string, error)
 	useMasterKey() bool
-	session() *session
+	sessionToken() string
 	contentType() string
 }
 
@@ -114,15 +114,14 @@ func (c *Client) doRequest(op request) ([]byte, error) {
 
 	req.Header.Add(UserAgentHeader, c.userAgent)
 	req.Header.Add(AppIdHeader, c.appId)
-	if op.useMasterKey() && c.masterKey != "" && op.session() == nil {
+	if op.useMasterKey() && c.masterKey != "" && op.sessionToken() == "" {
 		req.Header.Add(MasterKeyHeader, c.masterKey)
 	} else {
 		req.Header.Add(RestKeyHeader, c.restKey)
-		if s := op.session(); s != nil {
-			req.Header.Add(SessionTokenHeader, s.sessionToken)
+		if st := op.sessionToken(); st != "" {
+			req.Header.Add(SessionTokenHeader, st)
 		}
 	}
-
 	if c := op.contentType(); c != "" {
 		req.Header.Add("Content-Type", op.contentType())
 	}
@@ -164,7 +163,6 @@ func (c *Client) doRequest(op request) ([]byte, error) {
 		}
 		return nil, &apiErr
 	}
-
 	return respBody, nil
 }
 
@@ -195,7 +193,6 @@ func handleResponse(body []byte, dst interface{}) error {
 
 func getFields(t reflect.Type) []reflect.StructField {
 	fields := make([]reflect.StructField, 0)
-
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
@@ -219,7 +216,6 @@ func getFields(t reflect.Type) []reflect.StructField {
 			}
 		}
 	}
-
 	return fields
 }
 
@@ -233,20 +229,17 @@ func getFieldNameMap(v reflect.Value) map[string]string {
 			t = t.Elem()
 		}
 	}
-
 	if f, ok := fieldNameCache[t]; ok {
 		return f
 	}
 
 	fields := getFields(t)
-
 	fieldMap := make(map[string]string)
 	for _, f := range fields {
 		if name, _ := parseTag(f.Tag.Get("parse")); name != "" && name != "-" {
 			fieldMap[name] = f.Name
 		}
 	}
-
 	fieldNameCache[t] = fieldMap
 	return fieldMap
 }
@@ -269,7 +262,6 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 		dvi.Set(reflect.Zero(dvi.Type()))
 		return nil
 	}
-
 	sv := reflect.ValueOf(src)
 	svi := reflect.Indirect(sv)
 
@@ -285,7 +277,6 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 				} else {
 					newV = reflect.New(dt)
 				}
-
 				err := populateValue(newV.Interface(), sv.Index(i).Interface())
 				if err != nil {
 					return err
@@ -337,25 +328,20 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 				if f := dvi.FieldByName("Extra"); f.IsValid() && f.CanSet() && f.IsNil() {
 					f.Set(reflect.ValueOf(make(map[string]interface{})))
 				}
-
 				for k, v := range m {
 					if k == "__type" || k == "className" {
 						continue
 					}
-
 					if nk, ok := fieldNameMap[k]; ok {
 						k = nk
 					}
-
 					k = firstToUpper(k)
-
 					if f := dvi.FieldByName(k); f.IsValid() && v != nil {
 						if f.Kind() == reflect.Ptr {
 							if f.IsNil() {
 								f.Set(reflect.New(f.Type().Elem()))
 							}
 						}
-
 						fi := reflect.Indirect(f)
 						if fi.CanSet() {
 							var err error
@@ -444,10 +430,8 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 			if dvi.IsNil() {
 				dvi = reflect.New(dvi.Type())
 			}
-
 			dvi = dvi.Elem()
 		}
-
 		if sv.Type().AssignableTo(dvi.Type()) {
 			if dvi.CanSet() {
 				dvi.Set(sv)
@@ -461,6 +445,5 @@ func populateValue(dst interface{}, src interface{}) (err error) {
 			return nil
 		}
 	}
-
 	return nil
 }

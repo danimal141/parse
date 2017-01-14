@@ -29,6 +29,9 @@ type Query interface {
 	// Use the Master Key for the given request.
 	UseMasterKey()
 
+	// Set the session token for the given request.
+	SetSessionToken(st string)
+
 	// Get retrieves the instance of the type pointed to by v and
 	// identified by id, and stores the result in v.
 	Get(id string) error
@@ -259,8 +262,7 @@ type query struct {
 	keys      map[string]struct{}
 	className string
 
-	currentSession *session
-
+	st                 string
 	shouldUseMasterKey bool
 }
 
@@ -284,6 +286,10 @@ func (c *Client) NewQuery(v interface{}) (Query, error) {
 
 func (q *query) UseMasterKey() {
 	q.shouldUseMasterKey = true
+}
+
+func (q *query) SetSessionToken(st string) {
+	q.st = st
 }
 
 func (q *query) Get(id string) error {
@@ -631,7 +637,7 @@ func (q *query) Clone() Query {
 		inst:               q.inst,
 		op:                 q.op,
 		instId:             q.instId,
-		currentSession:     q.currentSession,
+		st:                 q.st,
 		className:          q.className,
 		shouldUseMasterKey: q.shouldUseMasterKey,
 	}
@@ -953,8 +959,8 @@ func (q *query) useMasterKey() bool {
 	return q.shouldUseMasterKey
 }
 
-func (q *query) session() *session {
-	return q.currentSession
+func (q *query) sessionToken() string {
+	return q.st
 }
 
 func (q *query) contentType() string {

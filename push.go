@@ -141,8 +141,8 @@ func (p *pushRequest) useMasterKey() bool {
 	return p.shouldUseMasterKey
 }
 
-func (p *pushRequest) session() *session {
-	return nil
+func (p *pushRequest) sessionToken() string {
+	return ""
 }
 
 func (p *pushRequest) contentType() string {

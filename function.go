@@ -10,20 +10,20 @@ import (
 type Params map[string]interface{}
 
 func (c *Client) CallFunction(name string, params Params, resp interface{}) error {
-	return c.callFn(name, params, resp, nil)
+	return c.callFn(name, params, resp, "")
 }
 
 type callFnRequest struct {
-	name           string
-	params         Params
-	currentSession *session
+	name   string
+	params Params
+	st     string
 }
 
 type fnResponse struct {
 	Result interface{} `parse:"result"`
 }
 
-func (c *Client) callFn(name string, params Params, resp interface{}, currentSession *session) error {
+func (c *Client) callFn(name string, params Params, resp interface{}, sessionToken string) error {
 	rv := reflect.ValueOf(resp)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return fmt.Errorf("parse: expected a non-nil pointer got %v", rv.Kind())
@@ -32,12 +32,12 @@ func (c *Client) callFn(name string, params Params, resp interface{}, currentSes
 	if params == nil {
 		params = Params{}
 	}
-
 	cr := &callFnRequest{
-		name:           name,
-		params:         params,
-		currentSession: currentSession,
+		name:   name,
+		params: params,
+		st:     sessionToken,
 	}
+
 	if b, err := c.doRequest(cr); err != nil {
 		return err
 	} else {
@@ -66,8 +66,8 @@ func (c *callFnRequest) useMasterKey() bool {
 	return false
 }
 
-func (c *callFnRequest) session() *session {
-	return c.currentSession
+func (c *callFnRequest) sessionToken() string {
+	return c.st
 }
 
 func (c *callFnRequest) contentType() string {

@@ -350,7 +350,6 @@ func (a *acl) MarshalJSON() ([]byte, error) {
 			}
 		}
 	}
-
 	for k, v := range a.write {
 		if v {
 			if p, ok := m[k]; ok {
@@ -368,7 +367,6 @@ func (a *acl) MarshalJSON() ([]byte, error) {
 			"read": true,
 		}
 	}
-
 	if a.publicWriteAccess {
 		if p, ok := m["*"]; !ok {
 			m["*"] = map[string]bool{
@@ -378,7 +376,6 @@ func (a *acl) MarshalJSON() ([]byte, error) {
 			p["write"] = true
 		}
 	}
-
 	return json.Marshal(m)
 }
 
@@ -388,11 +385,9 @@ func (a *acl) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &m); err != nil {
 		return err
 	}
-
 	if a.read == nil {
 		a.read = map[string]bool{}
 	}
-
 	if a.write == nil {
 		a.write = map[string]bool{}
 	}
@@ -770,8 +765,8 @@ func (c *configRequest) useMasterKey() bool {
 	return false
 }
 
-func (c *configRequest) session() *session {
-	return nil
+func (c *configRequest) sessionToken() string {
+	return ""
 }
 
 func (c *configRequest) contentType() string {
@@ -790,7 +785,6 @@ func (c *Client) GetConfig() (Config, error) {
 	if err := json.Unmarshal(b, &cfg); err != nil {
 		return nil, err
 	}
-
 	return cfg.Params, nil
 }
 
@@ -834,10 +828,10 @@ func encodeForRequest(v interface{}) interface{} {
 	if v == nil {
 		return nil
 	}
-
 	rv := reflect.ValueOf(v)
 	rvi := reflect.Indirect(rv)
 	rt := rvi.Type()
+
 	if rt.Kind() == reflect.Struct {
 		switch v.(type) {
 		case time.Time, *time.Time, Date, *Date:
@@ -889,6 +883,5 @@ func encodeForRequest(v interface{}) interface{} {
 		}
 		return vals
 	}
-
 	return v
 }

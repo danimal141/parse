@@ -9,7 +9,7 @@ import (
 type createRequest struct {
 	v                  interface{}
 	shouldUseMasterKey bool
-	currentSession     *session
+	st                 string
 
 	isUser   bool
 	username string
@@ -23,14 +23,14 @@ type createRequest struct {
 // Note: v should be a pointer to a struct whose name represents a Parse class,
 // or that implements the ClassName method
 func (c *Client) Create(v interface{}, useMasterKey bool) error {
-	return c.create(v, useMasterKey, nil)
+	return c.create(v, useMasterKey, "")
 }
 
 func (c *Client) Signup(username string, password string, user interface{}) error {
 	cr := &createRequest{
 		v:                  user,
 		shouldUseMasterKey: false,
-		currentSession:     nil,
+		st:                 "",
 		isUser:             true,
 		username:           username,
 		password:           password,
@@ -42,7 +42,7 @@ func (c *Client) Signup(username string, password string, user interface{}) erro
 	}
 }
 
-func (c *Client) create(v interface{}, useMasterKey bool, currentSession *session) error {
+func (c *Client) create(v interface{}, useMasterKey bool, sessionToken string) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return fmt.Errorf("parse: expected a non-nil pointer got %v", rv.Kind())
@@ -51,7 +51,7 @@ func (c *Client) create(v interface{}, useMasterKey bool, currentSession *sessio
 	cr := &createRequest{
 		v:                  v,
 		shouldUseMasterKey: useMasterKey,
-		currentSession:     currentSession,
+		st:                 sessionToken,
 	}
 	if b, err := c.doRequest(cr); err != nil {
 		return err
@@ -99,7 +99,6 @@ func (c *createRequest) body() (string, error) {
 		} else {
 			fname = firstToLower(f.Name)
 		}
-
 		if canBeNil(fv) && fv.IsNil() {
 			payload[fname] = nil
 		} else {
@@ -111,7 +110,6 @@ func (c *createRequest) body() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return string(b), nil
 }
 
@@ -119,8 +117,8 @@ func (c *createRequest) useMasterKey() bool {
 	return c.shouldUseMasterKey
 }
 
-func (c *createRequest) session() *session {
-	return c.currentSession
+func (c *createRequest) sessionToken() string {
+	return c.st
 }
 
 func (c *createRequest) contentType() string {

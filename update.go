@@ -40,7 +40,6 @@ func (u updateRequestype) String() string {
 	case opRemoveRelation:
 		return "RemoveRelation"
 	}
-
 	return "Unknown"
 }
 
@@ -51,7 +50,6 @@ func (u updateRequestype) argKey() string {
 	case opAdd, opAddUnique, opRemove, opAddRelation, opRemoveRelation:
 		return "objects"
 	}
-
 	return "unknown"
 }
 
@@ -105,6 +103,9 @@ type Update interface {
 	// Use the Master Key for this update request
 	UseMasterKey()
 
+	// Set the session token for the given request.
+	SetSessionToken(st string)
+
 	// Execute this update. This method also updates the proper fields
 	// on the provided value with their repective new values
 	Execute() error
@@ -117,8 +118,8 @@ type updateRequest struct {
 
 	inst               interface{}
 	values             map[string]updateOp
+	st                 string
 	shouldUseMasterKey bool
-	currentSession     *session
 }
 
 // Create a new update request for the Parse object represented by v.
@@ -188,9 +189,7 @@ func (u *updateRequest) Execute() (err error) {
 		} else {
 			fname = k
 		}
-
 		fname = firstToUpper(fname)
-
 		dv := reflect.ValueOf(v.Value)
 		dvi := reflect.Indirect(dv)
 
@@ -256,15 +255,19 @@ func (u *updateRequest) UseMasterKey() {
 	u.shouldUseMasterKey = true
 }
 
+func (u *updateRequest) SetSessionToken(st string) {
+	u.st = st
+}
+
 func (u *updateRequest) method() string {
 	return "PUT"
 }
 
 func (u *updateRequest) endpoint() (string, error) {
 	p := getEndpointBase(u.inst)
-
 	rv := reflect.ValueOf(u.inst)
 	rvi := reflect.Indirect(rv)
+
 	if f := rvi.FieldByName("Id"); f.IsValid() {
 		if s, ok := f.Interface().(string); ok {
 			p = path.Join(p, s)
@@ -274,7 +277,6 @@ func (u *updateRequest) endpoint() (string, error) {
 	} else {
 		return "", fmt.Errorf("parse: can not update value - type has no Id field")
 	}
-
 	return p, nil
 }
 
@@ -283,7 +285,6 @@ func (u *updateRequest) body() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return string(b), nil
 }
 
@@ -291,8 +292,8 @@ func (u *updateRequest) useMasterKey() bool {
 	return u.shouldUseMasterKey
 }
 
-func (u *updateRequest) session() *session {
-	return u.currentSession
+func (u *updateRequest) sessionToken() string {
+	return u.st
 }
 
 func (u *updateRequest) contentType() string {
@@ -303,7 +304,6 @@ func (c *Client) LinkFacebookAccount(u *User, a *FacebookAuthData) error {
 	if u.Id == "" {
 		return errors.New("parse: user Id field must not be empty")
 	}
-
 	up, _ := c.NewUpdate(u)
 	up.Set("authData", AuthData{Facebook: a})
 	up.UseMasterKey()
