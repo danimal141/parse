@@ -337,6 +337,7 @@ func (q *query) NotEqualTo(f string, v interface{}) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$ne"] = qv
 		}
+		return
 	}
 
 	q.where[f] = map[string]interface{}{
@@ -358,6 +359,7 @@ func (q *query) GreaterThan(f string, v interface{}) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$gt"] = qv
 		}
+		return
 	}
 
 	q.where[f] = map[string]interface{}{
@@ -379,6 +381,7 @@ func (q *query) GreaterThanOrEqual(f string, v interface{}) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$gte"] = qv
 		}
+		return
 	}
 
 	q.where[f] = map[string]interface{}{
@@ -400,6 +403,7 @@ func (q *query) LessThan(f string, v interface{}) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$lt"] = qv
 		}
+		return
 	}
 
 	q.where[f] = map[string]interface{}{
@@ -421,6 +425,7 @@ func (q *query) LessThanOrEqual(f string, v interface{}) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$lte"] = qv
 		}
+		return
 	}
 
 	q.where[f] = map[string]interface{}{
@@ -433,6 +438,7 @@ func (q *query) In(f string, vs ...interface{}) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$in"] = vs
 		}
+		return
 	}
 
 	q.where[f] = map[string]interface{}{
@@ -445,6 +451,7 @@ func (q *query) NotIn(f string, vs ...interface{}) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$nin"] = vs
 		}
+		return
 	}
 
 	q.where[f] = map[string]interface{}{
@@ -457,6 +464,7 @@ func (q *query) Exists(f string) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$exists"] = true
 		}
+		return
 	}
 
 	q.where[f] = map[string]interface{}{
@@ -469,6 +477,7 @@ func (q *query) DoesNotExist(f string) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$exists"] = false
 		}
+		return
 	}
 
 	q.where[f] = map[string]interface{}{
@@ -481,6 +490,7 @@ func (q *query) All(f string, vs ...interface{}) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$all"] = vs
 		}
+		return
 	}
 
 	q.where[f] = map[string]interface{}{
@@ -494,6 +504,7 @@ func (q *query) Contains(f string, v string) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$regex"] = v
 		}
+		return
 	}
 
 	q.where[f] = map[string]interface{}{
@@ -507,6 +518,7 @@ func (q *query) StartsWith(f string, v string) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$regex"] = v
 		}
+		return
 	}
 
 	q.where[f] = map[string]interface{}{
@@ -520,6 +532,7 @@ func (q *query) EndsWith(f string, v string) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$regex"] = v
 		}
+		return
 	}
 
 	q.where[f] = map[string]interface{}{
@@ -533,10 +546,10 @@ func (q *query) Matches(f string, v string, ignoreCase bool, multiLine bool) {
 		if m, ok := cv.(map[string]interface{}); ok {
 			m["$regex"] = v
 		}
-	}
-
-	q.where[f] = map[string]interface{}{
-		"$regex": v,
+	} else {
+		q.where[f] = map[string]interface{}{
+			"$regex": v,
+		}
 	}
 
 	var options string
@@ -768,7 +781,7 @@ func (q *query) Each(rc interface{}) (*Iterator, error) {
 			}
 
 			s := reflect.New(sliceType)
-			s.Elem().Set(reflect.MakeSlice(sliceType, 0, 100))
+			s.Elem().Set(reflect.MakeSlice(sliceType, 0, *q.limit))
 
 			// TODO: handle errors and retry if possible
 			b, err := q.client.doRequest(q)
@@ -925,7 +938,6 @@ func (q *query) payload() (string, error) {
 		k := strings.Join(ks, ",")
 		p["keys"] = []string{k}
 	}
-
 	return p.Encode(), nil
 }
 
