@@ -10,7 +10,7 @@ few exceptions (listed below under TODO).
 
     go get github.com/kylemcc/parse
 
-###Documentation
+### Documentation
 [Full documentation](http://godoc.org/github.com/kylemcc/parse) is provided by [godoc.org](http://godoc.org)
 
 ### Usage:
